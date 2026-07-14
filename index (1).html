@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>グランディハウス AIロープレジェネレーター</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F6F7F4;
+    --grid:#DCE3E2;
+    --ink:#16242E;
+    --ink-60:#5B6B74;
+    --ink-30:#9AA6AC;
+    --line:#C7D0D2;
+    --seal:#B23A2E;
+    --seal-soft:#F0DDD9;
+    --white:#FFFFFF;
+    --radius:2px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:"Zen Kaku Gothic New",system-ui,sans-serif;
+    color:var(--ink);
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px,transparent 1px),
+      linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+    background-size:24px 24px;
+    background-position:-1px -1px;
+    line-height:1.75;
+    font-size:15px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1160px;margin:0 auto;padding:0 20px 96px}
+
+  /* header */
+  header{padding:48px 0 28px;border-bottom:1px solid var(--ink);margin-bottom:32px}
+  .eyebrow{
+    font-family:"Roboto Mono",monospace;font-size:11px;letter-spacing:.18em;
+    color:var(--ink-60);text-transform:uppercase;margin-bottom:14px;
+  }
+  h1{
+    font-family:"Zen Old Mincho",serif;font-weight:700;
+    font-size:clamp(28px,4.4vw,42px);line-height:1.25;letter-spacing:.01em;
+  }
+  h1 .thin{color:var(--ink-30)}
+  .lede{margin-top:12px;color:var(--ink-60);max-width:none}
+
+  /* layout */
+  .cols{display:grid;grid-template-columns:1fr 320px;gap:40px;align-items:start}
+  @media(max-width:900px){.cols{grid-template-columns:1fr;gap:28px}}
+
+  /* step card */
+  .stage{background:var(--white);border:1px solid var(--ink);box-shadow:6px 6px 0 rgba(22,36,46,.07)}
+  .stage-head{
+    display:flex;justify-content:space-between;align-items:baseline;gap:16px;
+    padding:16px 24px;border-bottom:1px solid var(--line);
+  }
+  .step-no{font-family:"Roboto Mono",monospace;font-size:12px;color:var(--seal);letter-spacing:.1em}
+  .bar{height:2px;background:var(--line);position:relative;overflow:hidden}
+  .bar span{position:absolute;inset:0 auto 0 0;background:var(--seal);width:0;transition:width .35s ease}
+  .stage-body{padding:28px 24px 24px}
+  h2{font-family:"Zen Old Mincho",serif;font-size:21px;font-weight:700;margin-bottom:6px}
+  .hint{color:var(--ink-60);font-size:13px;margin-bottom:22px}
+
+  .step{display:none}
+  .step.active{display:block;animation:fade .3s ease both}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  /* fields */
+  .field{margin-bottom:20px}
+  .field > label,.legend{
+    display:block;font-size:12px;font-weight:700;letter-spacing:.06em;
+    color:var(--ink);margin-bottom:8px;
+  }
+  .legend small{font-weight:400;color:var(--ink-30);letter-spacing:0;margin-left:6px}
+  input[type=text],textarea,select{
+    width:100%;font:inherit;font-size:14px;color:var(--ink);background:var(--white);
+    border:1px solid var(--line);border-radius:var(--radius);padding:9px 11px;
+  }
+  textarea{min-height:76px;resize:vertical}
+  input:focus,textarea:focus,select:focus{outline:2px solid var(--seal);outline-offset:1px;border-color:var(--seal)}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  @media(max-width:640px){.row,.row3{grid-template-columns:1fr}}
+
+  /* choice chips */
+  .choices{display:grid;gap:8px}
+  .choices.two{grid-template-columns:1fr 1fr}
+  @media(max-width:640px){.choices.two{grid-template-columns:1fr}}
+  .choice{
+    display:flex;gap:10px;align-items:flex-start;cursor:pointer;
+    border:1px solid var(--line);border-radius:var(--radius);padding:11px 13px;background:var(--white);
+    transition:border-color .15s,background .15s;
+  }
+  .choice:hover{border-color:var(--ink-60)}
+  .choice input{position:absolute;opacity:0;width:0;height:0}
+  .mark{
+    flex:0 0 auto;width:14px;height:14px;margin-top:5px;border:1px solid var(--ink-30);border-radius:50%;
+    position:relative;background:var(--white);
+  }
+  .choice.multi .mark{border-radius:1px}
+  .choice input:checked + .mark{border-color:var(--seal);background:var(--seal);box-shadow:inset 0 0 0 2px var(--white)}
+  .choice.multi input:checked + .mark{box-shadow:none}
+  .choice.multi input:checked + .mark::after{
+    content:"";position:absolute;left:4px;top:1px;width:4px;height:8px;
+    border:solid var(--white);border-width:0 2px 2px 0;transform:rotate(42deg);
+  }
+  .choice:has(input:checked){border-color:var(--seal);background:var(--seal-soft)}
+  .choice input:focus-visible + .mark{outline:2px solid var(--seal);outline-offset:2px}
+  .c-title{font-size:14px;font-weight:500;line-height:1.5}
+  .c-desc{display:block;font-size:12px;color:var(--ink-60);line-height:1.6}
+
+  /* nav */
+  .nav{display:flex;justify-content:space-between;gap:12px;padding:18px 24px;border-top:1px solid var(--line);background:#FBFCFB}
+  button{font:inherit;cursor:pointer;border-radius:var(--radius)}
+  .btn{
+    border:1px solid var(--ink);background:var(--ink);color:#fff;
+    padding:10px 22px;font-size:14px;font-weight:700;letter-spacing:.04em;
+  }
+  .btn:hover{background:#0C1920}
+  .btn.primary{background:var(--seal);border-color:var(--seal)}
+  .btn.primary:hover{background:#9B3025}
+  .btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+  .btn.ghost:hover{border-color:var(--ink)}
+  .btn:disabled{opacity:.35;cursor:not-allowed}
+  .btn:focus-visible{outline:2px solid var(--seal);outline-offset:2px}
+  .link{background:none;border:none;color:var(--ink-60);font-size:12px;text-decoration:underline;padding:4px}
+  .link:hover{color:var(--seal)}
+
+  /* karte (side panel) */
+  .karte{
+    position:sticky;top:24px;background:var(--white);border:1px solid var(--ink);
+    box-shadow:6px 6px 0 rgba(22,36,46,.07);
+  }
+  .karte h3{
+    font-family:"Zen Old Mincho",serif;font-size:14px;letter-spacing:.08em;
+    padding:14px 16px;border-bottom:1px solid var(--ink);display:flex;justify-content:space-between;align-items:center;
+  }
+  .karte h3 span{font-family:"Roboto Mono",monospace;font-size:10px;color:var(--ink-30);letter-spacing:.1em}
+  .karte dl{display:grid;grid-template-columns:82px 1fr}
+  .karte dt{
+    font-size:11px;color:var(--ink-60);padding:9px 10px;border-bottom:1px solid var(--line);
+    border-right:1px solid var(--line);background:#FBFCFB;letter-spacing:.04em;
+  }
+  .karte dd{font-size:12.5px;padding:9px 12px;border-bottom:1px solid var(--line);min-height:36px;line-height:1.5}
+  .karte dd.empty{color:var(--ink-30)}
+  .karte dd.empty::before{content:"—"}
+  .stamp{
+    margin:16px auto 18px;width:88px;height:88px;border:2px solid var(--seal);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;color:var(--seal);
+    font-family:"Zen Old Mincho",serif;font-size:15px;font-weight:700;letter-spacing:.1em;
+    transform:rotate(-8deg);opacity:0;transition:opacity .4s ease;line-height:1.3;text-align:center;
+  }
+  .stamp.on{opacity:.9}
+
+  /* output */
+  .out{display:none}
+  .out.active{display:block}
+  .out-head{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid var(--line)}
+  .out-actions{display:flex;gap:8px;flex-wrap:wrap}
+  pre{
+    font-family:"Roboto Mono","Zen Kaku Gothic New",monospace;font-size:12.5px;line-height:1.85;
+    white-space:pre-wrap;word-break:break-word;padding:24px;max-height:62vh;overflow:auto;background:#FBFCFB;
+  }
+  .toast{
+    position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);opacity:0;pointer-events:none;
+    background:var(--ink);color:#fff;padding:10px 18px;font-size:13px;transition:.25s;
+  }
+  .toast.on{opacity:1;transform:translate(-50%,0)}
+  footer{margin-top:40px;font-size:12px;color:var(--ink-30);text-align:center}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Sales Roleplay / Customer Prompt Builder</div>
+    <h1>グランディハウス<br><span class="thin">AIロープレジェネレーター</span></h1>
+    <p class="lede">質問に答えていくと、AIが顧客役を演じるためのプロンプトができます。<br>できたプロンプトをリフレクトルに入れて使いましょう。</p>
+  </header>
+
+  <div class="cols">
+    <!-- ==== main ==== -->
+    <main>
+      <section class="stage" id="stage">
+        <div class="stage-head">
+          <div class="step-no" id="stepNo">STEP 1 / 7</div>
+          <button class="link" id="randomBtn" type="button">おまかせで埋める</button>
+        </div>
+        <div class="bar"><span id="bar"></span></div>
+
+        <div class="stage-body">
+
+          <!-- STEP 1 -->
+          <div class="step active" data-step="1">
+            <h2>どの物件の見学ですか</h2>
+            <p class="hint">案内する物件の情報です。自社の物件に書き換えて使ってください。</p>
+            <div class="field">
+              <label for="pName">物件名</label>
+              <input type="text" id="pName" value="れいめい ななさと駅 12号地">
+            </div>
+            <div class="row">
+              <div class="field">
+                <label for="pStation">最寄り駅</label>
+                <input type="text" id="pStation" value="ななさと駅">
+              </div>
+              <div class="field">
+                <label for="pWalk">駅からの徒歩分数</label>
+                <input type="text" id="pWalk" value="10分">
+              </div>
+            </div>
+            <div class="row">
+              <div class="field">
+                <label for="pArea">エリア</label>
+                <input type="text" id="pArea" value="さいたま市見沼区">
+              </div>
+              <div class="field">
+                <label for="pSchool">学校区</label>
+                <input type="text" id="pSchool" value="七里小学校区">
+              </div>
+            </div>
+            <div class="row3">
+              <div class="field">
+                <label for="pPrice">価格</label>
+                <input type="text" id="pPrice" value="3,990万円">
+              </div>
+              <div class="field">
+                <label for="pPlan">間取り</label>
+                <input type="text" id="pPlan" value="3LDK">
+              </div>
+              <div class="field">
+                <label for="pPark">駐車スペース</label>
+                <input type="text" id="pPark" value="2台">
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 2 -->
+          <div class="step" data-step="2">
+            <h2>どんな家族のお客様ですか</h2>
+            <p class="hint">家族の型を選ぶと、下の項目に候補が入ります。そのまま使っても、書き換えても構いません。</p>
+            <div class="field">
+              <div class="legend">家族の型</div>
+              <div class="choices" id="householdChoices"></div>
+            </div>
+            <div class="field">
+              <div class="legend">商談に来ているのは <small>誰と話すロープレにするか</small></div>
+              <div class="choices two" id="speakerChoices"></div>
+            </div>
+            <div class="row">
+              <div class="field"><label for="hName">夫の名前・年齢</label><input type="text" id="hName" value="佐藤健太（36歳）"></div>
+              <div class="field"><label for="wName">妻の名前・年齢</label><input type="text" id="wName" value="佐藤美咲（32歳）"></div>
+            </div>
+            <div class="field"><label for="kids">子ども</label><input type="text" id="kids" value="長女6歳、長男3歳"></div>
+            <div class="row">
+              <div class="field"><label for="hJob">夫の仕事</label><input type="text" id="hJob" value="食品メーカーの法人営業／正社員・勤続12年・年収520万円"></div>
+              <div class="field"><label for="wJob">妻の仕事</label><input type="text" id="wJob" value="市立保育園の保育士／正社員・勤続8年・年収280万円"></div>
+            </div>
+            <div class="row">
+              <div class="field"><label for="income">世帯年収</label><input type="text" id="income" value="約800万円"></div>
+              <div class="field"><label for="live">今の住まい・家賃</label><input type="text" id="live" value="賃貸マンション（居住5年）／月9万2,000円"></div>
+            </div>
+          </div>
+
+          <!-- STEP 3 -->
+          <div class="step" data-step="3">
+            <h2>お金まわりはどうなっていますか</h2>
+            <p class="hint">物件価格との差が、そのまま商談の難所になります。</p>
+            <div class="row3">
+              <div class="field"><label for="budget">希望予算</label><input type="text" id="budget" value="3,800万円"></div>
+              <div class="field"><label for="down">頭金</label><input type="text" id="down" value="300万円"></div>
+              <div class="field"><label for="monthly">月々の希望返済額</label><input type="text" id="monthly" value="10万円まで"></div>
+            </div>
+            <div class="field">
+              <div class="legend">物件価格と予算の関係</div>
+              <div class="choices" id="gapChoices"></div>
+            </div>
+            <div class="field">
+              <div class="legend">ほかの借入れ</div>
+              <div class="choices two" id="loanChoices"></div>
+            </div>
+          </div>
+
+          <!-- STEP 4 -->
+          <div class="step" data-step="4">
+            <h2>検討はどこまで進んでいますか</h2>
+            <p class="hint">検討フェーズによって、営業が引き出すべきことも、お客様の警戒心も変わります。</p>
+            <div class="field">
+              <div class="legend">検討フェーズ</div>
+              <div class="choices" id="phaseChoices"></div>
+            </div>
+            <div class="field">
+              <div class="legend">購入時期の考え</div>
+              <div class="choices two" id="timingChoices"></div>
+            </div>
+          </div>
+
+          <!-- STEP 5 -->
+          <div class="step" data-step="5">
+            <h2>このお客様の潜在ニーズは何ですか</h2>
+            <p class="hint">深掘りされて初めて出てくる「本当に叶えたいこと」です。ここが練習の核になります。</p>
+            <div class="field">
+              <div class="legend">本当に実現したいこと <small>1つ選ぶ</small></div>
+              <div class="choices" id="needChoices"></div>
+            </div>
+            <div class="field">
+              <label for="needFree">補足があれば（任意）</label>
+              <textarea id="needFree" placeholder="例：前の家で子どもの足音を注意され続けたことが本当は一番こたえている"></textarea>
+            </div>
+          </div>
+
+          <!-- STEP 6 -->
+          <div class="step" data-step="6">
+            <h2>どんな不安を隠していますか</h2>
+            <p class="hint">聞かれるまで自分からは言いません。いくつでも選べます。</p>
+            <div class="field">
+              <div class="legend">隠れた不安・懸念 <small>複数選択可</small></div>
+              <div class="choices" id="fearChoices"></div>
+            </div>
+          </div>
+
+          <!-- STEP 7 -->
+          <div class="step" data-step="7">
+            <h2>どんな性格で、どのくらい手強いですか</h2>
+            <p class="hint">同じ設定でも、ここを変えるだけで別のロープレになります。</p>
+            <div class="field">
+              <div class="legend">性格タイプ</div>
+              <div class="choices" id="personaChoices"></div>
+            </div>
+            <div class="field">
+              <div class="legend">難易度</div>
+              <div class="choices" id="levelChoices"></div>
+            </div>
+            <div class="field">
+              <label for="extra">追加したい事情（任意）</label>
+              <textarea id="extra" placeholder="例：妻の両親が同じ市内に住んでいて、近居を強く勧められている"></textarea>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="nav">
+          <button class="btn ghost" id="prevBtn" type="button">戻る</button>
+          <button class="btn primary" id="nextBtn" type="button">次へ</button>
+        </div>
+      </section>
+
+      <!-- ==== output ==== -->
+      <section class="stage out" id="out">
+        <div class="out-head">
+          <div>
+            <div class="step-no">PROMPT</div>
+            <strong id="outTitle">顧客プロンプト</strong>
+          </div>
+          <div class="out-actions">
+            <button class="btn ghost" id="editBtn" type="button">設定を直す</button>
+            <button class="btn ghost" id="dlBtn" type="button">.txtで保存</button>
+            <button class="btn primary" id="copyBtn" type="button">コピーする</button>
+          </div>
+        </div>
+        <pre id="promptText"></pre>
+        <div class="nav">
+          <button class="btn ghost" id="resetBtn" type="button">最初からつくる</button>
+          <button class="btn" id="copyBtn2" type="button">コピーする</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- ==== karte ==== -->
+    <aside>
+      <div class="karte">
+        <h3>顧客カルテ<span>DRAFT</span></h3>
+        <dl>
+          <dt>物件</dt><dd id="k-p" class="empty"></dd>
+          <dt>家族</dt><dd id="k-f" class="empty"></dd>
+          <dt>話す相手</dt><dd id="k-s" class="empty"></dd>
+          <dt>資金</dt><dd id="k-m" class="empty"></dd>
+          <dt>フェーズ</dt><dd id="k-ph" class="empty"></dd>
+          <dt>潜在ニーズ</dt><dd id="k-n" class="empty"></dd>
+          <dt>隠れた不安</dt><dd id="k-fe" class="empty"></dd>
+          <dt>性格・難易度</dt><dd id="k-pe" class="empty"></dd>
+        </dl>
+        <div class="stamp" id="stamp">生成<br>済</div>
+      </div>
+    </aside>
+  </div>
+
+  <footer>グランディハウス AIロープレジェネレーター／生成したプロンプトはリフレクトルのAIロープレに貼り付けて使えます。</footer>
+</div>
+<div class="toast" id="toast">コピーしました</div>
+
+<script>
+/* ============ データ定義 ============ */
+const HOUSEHOLDS = [
+  {id:'early', t:'子育て初期（未就学児2人）', d:'30代前半・世帯700万円。手狭さと騒音がきっかけ。',
+   f:{hName:'田中翔太（32歳）',wName:'田中結衣（30歳）',kids:'長男4歳、長女1歳',
+      hJob:'物流会社の営業／正社員・勤続8年・年収450万円',wJob:'医療事務／正社員（育休明け）・年収250万円',
+      income:'約700万円',live:'2LDKの賃貸アパート（居住4年）／月8万5,000円'},
+   bg:['下の子が生まれて2LDKでは手狭になってきた','子どもの足音や泣き声で階下に気をつかっている','小学校に上がる前に住まいを決めておきたい']},
+  {id:'mid', t:'子育て中期（小学生＋未就学児）', d:'30代後半・世帯800万円。学区が最優先。',
+   f:{hName:'佐藤健太（36歳）',wName:'佐藤美咲（32歳）',kids:'長女6歳、長男3歳',
+      hJob:'食品メーカーの法人営業／正社員・勤続12年・年収520万円',wJob:'市立保育園の保育士／正社員・勤続8年・年収280万円',
+      income:'約800万円',live:'賃貸マンション（居住5年）／月9万2,000円'},
+   bg:['子どもが2人になり今の住まいが手狭になってきた','子どもの足音や声で周囲に迷惑をかけないか気をつかっている','長女の学校生活を考え、落ち着いて暮らせる住まいを持ちたい']},
+  {id:'three', t:'子ども3人・完全に手狭', d:'40代前半・世帯900万円。部屋数と収納が死活問題。',
+   f:{hName:'高橋大輔（42歳）',wName:'高橋玲奈（39歳）',kids:'長男11歳、次男8歳、長女4歳',
+      hJob:'建設会社の施工管理／正社員・勤続18年・年収620万円',wJob:'ドラッグストアの店舗スタッフ／パート・年収130万円',
+      income:'約750万円',live:'3DKの賃貸（居住9年）／月10万円'},
+   bg:['子ども3人で部屋数がまったく足りていない','上の子がそろそろ自分の部屋をほしがっている','家じゅうに物があふれ、収納が足りない']},
+  {id:'dinks', t:'共働き夫婦・子どもはこれから', d:'20代後半〜30代・世帯750万円。資産価値も気にする。',
+   f:{hName:'伊藤涼介（31歳）',wName:'伊藤沙耶（29歳）',kids:'なし（1〜2年以内に希望）',
+      hJob:'IT企業のエンジニア／正社員・勤続6年・年収480万円（週2在宅）',wJob:'アパレル本社の企画職／正社員・勤続7年・年収380万円',
+      income:'約860万円',live:'1LDKの賃貸マンション（居住3年）／月11万円'},
+   bg:['家賃を払い続けるより資産になる住まいを持ちたい','子どもができる前に住まいを決めておきたい','夫婦とも在宅勤務があり、作業スペースがほしい']},
+  {id:'single', t:'ひとり親世帯', d:'40歳・年収450万円。返済不安が強く慎重。',
+   f:{hName:'—（該当なし）',wName:'中村真理（40歳）',kids:'長男9歳',
+      hJob:'—',wJob:'医療法人の事務職／正社員・勤続14年・年収450万円',
+      income:'約450万円',live:'2DKの賃貸（居住7年）／月7万8,000円'},
+   bg:['母子2人で落ち着いて暮らせる住まいを持ちたい','賃貸を借り続けることに将来の不安がある','自分ひとりの収入で返していけるかが最大の関心事']},
+  {id:'nisetai', t:'親の近居・将来の介護を視野', d:'40代・世帯900万円。実家との距離が条件。',
+   f:{hName:'小林達也（45歳）',wName:'小林由香（43歳）',kids:'長女14歳、長男10歳',
+      hJob:'メーカーの生産管理／正社員・勤続20年・年収650万円',wJob:'介護施設のケアマネジャー／正社員・年収330万円',
+      income:'約980万円',live:'分譲マンション賃貸（居住11年）／月11万5,000円'},
+   bg:['親が高齢になり、いざというときに通える距離に住みたい','子どもの進学までに住まいを固めたい','今の住まいが古く、設備の不満が積み重なっている']}
+];
+
+const SPEAKERS = [
+  {id:'husband', t:'夫だけ', d:'妻は不在。持ち帰り前提の会話になる。'},
+  {id:'wife', t:'妻だけ', d:'夫は不在。生活動線や家事の話が中心。'},
+  {id:'couple', t:'夫婦2人', d:'意見が割れる。両方に聞く力が要る。'}
+];
+
+const GAPS = [
+  {id:'over_small', t:'予算を少し超える', d:'価値を感じれば検討の余地あり。'},
+  {id:'over_big', t:'予算を大きく超える', d:'資金計画の提示なしには前に進まない。'},
+  {id:'inside', t:'予算内におさまる', d:'価格以外の判断軸を引き出す練習になる。'},
+  {id:'unknown', t:'予算をまだ決めきれていない', d:'いくらまで出せるか本人も曖昧。'}
+];
+
+const LOANS = [
+  {id:'none', t:'借入れなし'},
+  {id:'car', t:'車のローンが残っている（残160万円・月2万8,000円）'},
+  {id:'school', t:'奨学金の返済が残っている（残180万円・月1万5,000円）'},
+  {id:'card', t:'教育費・カードの分割払いがある'}
+];
+
+const PHASES = [
+  {id:'early', t:'情報収集をはじめたばかり', d:'見学は今回が2件目。比較軸すら固まっていない。',
+   others:['ほかの分譲住宅も調べ始めたところ','比較軸がまだ固まっていない','有力な物件はない']},
+  {id:'compare', t:'複数社を比較中', d:'他社も見ている。決め手を探している。',
+   others:['ほかの不動産会社の物件も2〜3件見ている','学区・駅距離・価格・間取り・収納・駐車場で比較している','最も有力な物件はまだ決まっていない']},
+  {id:'final', t:'他社に本命がある最終検討', d:'他社の方が安い／早い。ここでひっくり返す練習。',
+   others:['他社に本命の物件があり、価格はそちらの方が安い','今日はその比較のために来ている','担当者からは今週中に返事がほしいと言われている']},
+  {id:'urgent', t:'期限があって急いでいる', d:'賃貸の更新・転勤など。焦りと不安が同居。',
+   others:['賃貸の更新が3か月後に迫っている','期限があるため、決めなければという焦りがある','焦って決めて失敗したくない気持ちもある']}
+];
+
+const TIMINGS = [
+  {id:'soon', t:'条件が合えば早めに決めたい'},
+  {id:'half', t:'半年〜1年をめどに考えている'},
+  {id:'slow', t:'いい物件があれば、くらいの温度感'}
+];
+
+const NEEDS = [
+  {id:'edu', t:'教育費を圧迫せず、子どもがのびのび育つ環境',
+   deep:['住宅費が増えることで、教育費や家族で出かけるお金を削りたくない','子どもたちの足音や声を注意することが多く、家の中くらいは自由に過ごさせてあげたい'],
+   core:'教育費や日々の生活を圧迫せず、子どもたちがのびのびと安心して成長できる住まいを持つこと'},
+  {id:'time', t:'家事と通勤の負担を減らし、家族の時間を増やす',
+   deep:['共働きで毎日があわただしく、家事の動線が悪いことに疲れている','通勤や家事に取られる時間を減らして、家族で過ごす時間をつくりたい'],
+   core:'家事と移動の負担を減らし、家族そろって過ごす時間を取り戻すこと'},
+  {id:'noise', t:'賃貸での我慢（騒音・狭さ）から解放されたい',
+   deep:['階下や隣に気をつかい続けるのに疲れてしまった','家の中でくらい、家族が声を出して笑える暮らしがしたい'],
+   core:'周囲に気をつかわず、家族が気兼ねなく過ごせる自分たちの家を持つこと'},
+  {id:'asset', t:'資産として価値が落ちにくい家を持ちたい',
+   deep:['家賃を払い続けても何も残らないことに納得できていない','将来売ったり貸したりできる可能性は残しておきたい'],
+   core:'家賃で消えていくお金を、価値の残る資産に変えること'},
+  {id:'family', t:'親や配偶者に「良い選択だ」と認めてほしい',
+   deep:['家の話になると、親や配偶者の意見が気になってしまう','自分の判断が正しいと思えないと前に進めない'],
+   core:'家族や親から見ても納得できる選択をして、自分の判断に自信を持つこと'},
+  {id:'care', t:'親の近くに住み、いざというときに動ける',
+   deep:['親が高齢になり、何かあったときにすぐ行ける距離にいたい','介護の話をまだ家族で正面から話せていない'],
+   core:'親に何かあったときにすぐ動ける距離で、自分の家族の生活も守ること'},
+  {id:'safe', t:'この決断で失敗したくない（後悔しない買い方）',
+   deep:['一生に一度の買い物で失敗するのが怖い','納得できる材料がそろわないと決められない'],
+   core:'一生に一度の買い物で後悔しないよう、納得できる材料をそろえてから決めること'}
+];
+
+const FEARS = [
+  {id:'price', t:'諸費用まで含めると予算を超えること'},
+  {id:'monthly', t:'月々の支払いが希望額を超えること'},
+  {id:'plan', t:'子どもが成長した後もこの間取りで暮らせるか'},
+  {id:'storage', t:'収納が実際に足りるか'},
+  {id:'park', t:'駐車場に本当に停めやすいか'},
+  {id:'quality', t:'完成済みの建売は見えない部分の品質が分からないこと'},
+  {id:'hazard', t:'浸水や地盤などの災害リスク'},
+  {id:'saving', t:'頭金を出した後に貯蓄を残せるか'},
+  {id:'income', t:'将来の収入や雇用が続くかどうか'},
+  {id:'push', t:'営業に押し切られて決めてしまうこと'},
+  {id:'better', t:'もっと良い物件が他にあるのではないかということ'},
+  {id:'oppose', t:'親や配偶者に反対されること'}
+];
+
+const PERSONAS = [
+  {id:'careful', t:'真面目で慎重', d:'聞かれれば答えるが自分からは話さない。',
+   traits:['真面目で慎重','家族のことを優先して考える','聞かれれば答えるが、自分から詳しくは話さない','即決を迫られると警戒する']},
+  {id:'logical', t:'理詰め・質問が鋭い', d:'根拠のない話は突っ込まれる。',
+   traits:['理屈で納得したいタイプ','数字や根拠のない説明には「それはなぜですか」と聞き返す','曖昧な説明をされると信頼度が下がる','感情的な訴えかけには反応しない']},
+  {id:'emotive', t:'感情・雰囲気重視', d:'共感されると一気に話す。',
+   traits:['理屈より、暮らしのイメージや雰囲気で判断する','共感されると心を開き、話が長くなる','事務的に進められると気持ちが冷める','数字の話が続くと集中力が落ちる']},
+  {id:'guard', t:'警戒心が強い（営業が苦手）', d:'序盤は素っ気ない。信頼づくりの練習。',
+   traits:['営業されること自体に警戒心がある','序盤は素っ気なく、短い返事しかしない','売り込まれていると感じると、話を切り上げようとする','信頼できると感じて初めて事情を話す']},
+  {id:'fast', t:'決断は早いが要求が高い', d:'即断できるが条件は妥協しない。',
+   traits:['納得すれば決断は早い','ただし条件面の妥協はしない','あいまいな回答には「結局どうなんですか」と詰める','時間を無駄にされることを嫌う']},
+  {id:'passive', t:'本人は消極的（配偶者が乗り気）', d:'温度差そのものが商談の壁。',
+   traits:['自分はまだ買う気が固まっていない','配偶者に連れてこられた感覚がある','質問には答えるが、どこか他人事の口調になる','自分ごとになる理由を見つけられると、少しずつ前のめりになる']}
+];
+
+const LEVELS = [
+  {id:'easy', t:'やさしい', d:'聞けば答える。新人の練習向き。'},
+  {id:'normal', t:'標準', d:'深掘りされた分だけ話す。'},
+  {id:'hard', t:'手強い', d:'共感と深掘りがないと本音を出さない。'}
+];
+
+/* ============ 状態 ============ */
+const S = {
+  household:'mid', speaker:'husband', gap:'over_small', loan:'none',
+  phase:'compare', timing:'soon', need:'edu', fears:['price','monthly','plan'],
+  persona:'careful', level:'normal'
+};
+const $ = id => document.getElementById(id);
+const val = id => $(id).value.trim();
+
+/* ============ 選択肢の描画 ============ */
+function radios(host, list, key, cols){
+  const el = $(host);
+  if(cols) el.classList.add('two');
+  el.innerHTML = list.map(o => `
+    <label class="choice">
+      <input type="radio" name="${host}" value="${o.id}" ${S[key]===o.id?'checked':''}>
+      <span class="mark"></span>
+      <span class="c-title">${o.t}${o.d?`<span class="c-desc">${o.d}</span>`:''}</span>
+    </label>`).join('');
+  el.querySelectorAll('input').forEach(i => i.addEventListener('change', () => {
+    S[key] = i.value;
+    if(key==='household') applyHousehold(i.value);
+    paintKarte();
+  }));
+}
+function checks(host, list, key){
+  const el = $(host);
+  el.innerHTML = list.map(o => `
+    <label class="choice multi">
+      <input type="checkbox" value="${o.id}" ${S[key].includes(o.id)?'checked':''}>
+      <span class="mark"></span>
+      <span class="c-title">${o.t}</span>
+    </label>`).join('');
+  el.querySelectorAll('input').forEach(i => i.addEventListener('change', () => {
+    S[key] = [...el.querySelectorAll('input:checked')].map(x => x.value);
+    paintKarte();
+  }));
+}
+radios('householdChoices', HOUSEHOLDS, 'household');
+radios('speakerChoices', SPEAKERS, 'speaker', true);
+radios('gapChoices', GAPS, 'gap');
+radios('loanChoices', LOANS, 'loan', true);
+radios('phaseChoices', PHASES, 'phase');
+radios('timingChoices', TIMINGS, 'timing', true);
+radios('needChoices', NEEDS, 'need');
+checks('fearChoices', FEARS, 'fears');
+radios('personaChoices', PERSONAS, 'persona');
+radios('levelChoices', LEVELS, 'level');
+
+function applyHousehold(id){
+  const h = HOUSEHOLDS.find(x => x.id===id);
+  Object.entries(h.f).forEach(([k,v]) => { if($(k)) $(k).value = v; });
+  if(id==='single'){
+    S.speaker='wife';
+    document.querySelectorAll('input[name=speakerChoices]').forEach(i => i.checked = i.value==='wife');
+  }
+}
+
+/* ============ カルテ ============ */
+function set(id, text){
+  const el = $(id);
+  el.textContent = text || '';
+  el.classList.toggle('empty', !text);
+}
+function paintKarte(){
+  const h = HOUSEHOLDS.find(x=>x.id===S.household);
+  set('k-p', `${val('pName')}／${val('pPrice')}・${val('pPlan')}`);
+  set('k-f', `${h.t.split('（')[0]}／${val('kids')}・世帯${val('income')}`);
+  set('k-s', SPEAKERS.find(x=>x.id===S.speaker).t);
+  set('k-m', `予算${val('budget')}・月々${val('monthly')}／${GAPS.find(x=>x.id===S.gap).t}`);
+  set('k-ph', PHASES.find(x=>x.id===S.phase).t);
+  set('k-n', NEEDS.find(x=>x.id===S.need).t);
+  set('k-fe', S.fears.length ? S.fears.map(f=>FEARS.find(x=>x.id===f).t.slice(0,12)+'…').join('／') : '');
+  set('k-pe', `${PERSONAS.find(x=>x.id===S.persona).t}／${LEVELS.find(x=>x.id===S.level).t}`);
+}
+document.querySelectorAll('input[type=text],textarea').forEach(i => i.addEventListener('input', paintKarte));
+paintKarte();
+
+/* ============ ステップ制御 ============ */
+let step = 1;
+const LAST = 7;
+function show(n){
+  step = n;
+  document.querySelectorAll('.step').forEach(s => s.classList.toggle('active', +s.dataset.step===n));
+  $('stepNo').textContent = `STEP ${n} / ${LAST}`;
+  $('bar').style.width = (n/LAST*100) + '%';
+  $('prevBtn').disabled = n===1;
+  $('nextBtn').textContent = n===LAST ? 'プロンプトを生成する' : '次へ';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+$('nextBtn').onclick = () => { if(step===LAST) generate(); else show(step+1); };
+$('prevBtn').onclick = () => show(Math.max(1, step-1));
+$('editBtn').onclick = () => { $('out').classList.remove('active'); $('stage').style.display=''; show(LAST); };
+$('resetBtn').onclick = () => { $('out').classList.remove('active'); $('stage').style.display=''; $('stamp').classList.remove('on'); show(1); };
+show(1);
+
+/* ============ おまかせ ============ */
+const pick = a => a[Math.floor(Math.random()*a.length)];
+$('randomBtn').onclick = () => {
+  S.household = pick(HOUSEHOLDS).id; applyHousehold(S.household);
+  S.speaker = pick(SPEAKERS).id; S.gap = pick(GAPS).id; S.loan = pick(LOANS).id;
+  S.phase = pick(PHASES).id; S.timing = pick(TIMINGS).id; S.need = pick(NEEDS).id;
+  S.persona = pick(PERSONAS).id; S.level = pick(LEVELS).id;
+  const n = 2 + Math.floor(Math.random()*3);
+  S.fears = [...FEARS].sort(()=>Math.random()-.5).slice(0,n).map(f=>f.id);
+  ['householdChoices','speakerChoices','gapChoices','loanChoices','phaseChoices','timingChoices','needChoices','personaChoices','levelChoices'].forEach(host=>{
+    const key = {householdChoices:'household',speakerChoices:'speaker',gapChoices:'gap',loanChoices:'loan',phaseChoices:'phase',timingChoices:'timing',needChoices:'need',personaChoices:'persona',levelChoices:'level'}[host];
+    document.querySelectorAll(`input[name=${host}]`).forEach(i => i.checked = i.value===S[key]);
+  });
+  $('fearChoices').querySelectorAll('input').forEach(i => i.checked = S.fears.includes(i.value));
+  paintKarte();
+  toast('おまかせで埋めました');
+};
+
+/* ============ プロンプト生成 ============ */
+function buildPrompt(){
+  const h = HOUSEHOLDS.find(x=>x.id===S.household);
+  const sp = S.speaker, need = NEEDS.find(x=>x.id===S.need), per = PERSONAS.find(x=>x.id===S.persona);
+  const ph = PHASES.find(x=>x.id===S.phase), lv = S.level;
+  const P = {name:val('pName'),st:val('pStation'),walk:val('pWalk'),area:val('pArea'),
+             school:val('pSchool'),price:val('pPrice'),plan:val('pPlan'),park:val('pPark')};
+  const solo = h.id==='single';
+  const L = [];
+  const add = (...x) => L.push(x.join('\n'));
+  const bullets = a => a.map(x=>'・'+x).join('\n');
+
+  /* 役割 */
+  const roleLine = sp==='couple'
+    ? 'あなたは夫と妻の2人を演じ、夫婦そろって営業担当者と話しています。発言のたびに冒頭に「夫：」「妻：」と話し手を明示してください。'
+    : solo ? 'あなたはひとり親の本人として、1人で営業担当者と話しています。'
+    : sp==='husband' ? 'あなたは夫側の立場で営業担当者と話しています。妻は今日は同席していません。'
+    : 'あなたは妻側の立場で営業担当者と話しています。夫は今日は同席していません。';
+  add('# 役割','',
+    'あなたは、分譲住宅の購入を検討している「お客様役」です。','',
+    'ユーザーは分譲住宅の営業担当者として、あなたにヒアリングを行います。','',
+    roleLine,'',
+    `今回は、事前アンケートを記入したうえで、「${P.name}」の見学に来ています。`,'',
+    '現在は物件案内が始まる前です。','',
+    'ロールプレイ中は最後まで一般のお客様として振る舞い、営業担当者役、講師役、評価者役になってはいけません。');
+
+  /* 呼び方 */
+  const call = solo
+    ? ['自分の一人称は必ず「私」にしてください','配偶者はいません。ひとり親であることは、聞かれた場合にだけ答えてください']
+    : sp==='couple'
+    ? ['夫・妻とも一人称は必ず「私」にしてください','夫は配偶者を「妻」、妻は配偶者を「夫」と呼んでください','夫と妻で意見が完全には一致していません。相手の発言に相づちを打ったり、補足したり、やんわり異を唱えたりしてください','1回の返答で夫と妻が両方話す必要はありません。質問の内容に応じて、答えるべき方が答えてください']
+    : sp==='husband'
+    ? ['自分の一人称は必ず「私」にしてください','配偶者のことは必ず「妻」と呼んでください','「主人」「旦那」「夫」という言葉で自分のことを呼ばないでください','営業担当者から「ご主人」「旦那様」と言われた場合は、自分のこととして自然に受け止めてください','営業担当者から「奥様」「奥さん」と言われた場合は、妻のこととして自然に受け止めてください']
+    : ['自分の一人称は必ず「私」にしてください','配偶者のことは必ず「夫」と呼んでください','営業担当者から「奥様」「奥さん」と言われた場合は、自分のこととして自然に受け止めてください','営業担当者から「ご主人」と言われた場合は、夫のこととして自然に受け止めてください'];
+  add('---','','# 一人称・呼び方のルール','',bullets(call));
+
+  /* 基本情報 */
+  const base = [];
+  if(!solo){ base.push(`夫：${val('hName')}`, `妻：${val('wName')}`); }
+  else { base.push(`名前：${val('wName')}`); }
+  base.push(`子ども：${val('kids')}`);
+  if(!solo){ base.push(`夫の仕事：${val('hJob')}`, `妻の仕事：${val('wJob')}`); }
+  else { base.push(`仕事：${val('wJob')}`); }
+  base.push(`世帯年収：${val('income')}`, `現在の住まい：${P.area}周辺の${val('live')}`,
+    `ほかの借入れ：${LOANS.find(x=>x.id===S.loan).t}`);
+  add('---','','# 今回のお客様設定','','## 基本情報','',bullets(base));
+
+  /* 購入背景 */
+  const bg = [...h.bg];
+  if(S.timing==='soon') bg.push('条件と資金面に納得できる物件があれば、早めに購入してもよいと考えている');
+  if(S.timing==='half') bg.push('半年から1年をめどに購入を考えている');
+  if(S.timing==='slow') bg.push('急いではいないが、良い物件があれば前向きに考えたい');
+  if(S.phase==='urgent') bg.push('期限が迫っており、決めなければという焦りがある');
+  add('','## 購入背景','',bullets(bg));
+
+  /* 興味を持った理由 */
+  const why = [`物件名は「${P.name}」`, `${P.st}から徒歩${P.walk}程度であること`,
+    `希望している${P.school}内であること`,
+    `現在と同じ${P.area}内で、生活環境を大きく変えずに住み替えられること`,
+    `駐車スペースが${P.park}分ありそうなこと`, '収納が充実していそうなこと'];
+  const gapWhy = {
+    over_small:`物件価格が${P.price}からで、希望予算より少し高いことが気になっている`,
+    over_big:`物件価格が${P.price}からで、希望予算を大きく超えることが気になっている`,
+    inside:`物件価格が${P.price}からで、予算内におさまりそうなこと`,
+    unknown:`物件価格が${P.price}からだが、自分たちにとって適正なのか判断がついていない`
+  }[S.gap];
+  why.push(gapWhy);
+  add('','## 今回の物件に興味を持った理由','',bullets(why));
+
+  /* 認識範囲 */
+  add('---','','# 物件情報の認識範囲','',
+    '現在は物件案内前のため、物件の詳しい間取り、設備、住宅性能、部屋の広さ、収納量、家事動線などは十分に把握していません。','',
+    'チラシやインターネットを見て、以下の内容だけを大まかに知っています。','',
+    bullets([`${P.st}から徒歩${P.walk}程度`, `${P.school}内`, `販売価格は${P.price}から`, P.plan,
+      `駐車スペースが${P.park}分ありそう`, '収納が充実していそう', '省エネ性や耐震性に配慮された住宅らしい']),'',
+    '住宅性能や設備の商品名、具体的な数値、専門的な仕組みまでは把握していません。','',
+    '物件をまだ見ていないため、実際の使いやすさや住み心地について断定してはいけません。');
+
+  /* 資金計画 */
+  const money = [`希望予算：${val('budget')}程度`, `頭金：約${val('down')}`, `月々の希望支払い額：${val('monthly')}`,
+    'ボーナス払いは積極的には考えていない', '頭金をすべて使い切ることには不安がある', '教育費や急な出費に備える資金は残しておきたい'];
+  if(S.loan!=='none') money.push(`${LOANS.find(x=>x.id===S.loan).t}ため、住宅ローンの借入可能額に影響しないか気にしている`);
+  const gapMoney = {
+    over_small:['物件価格が希望予算を上回るため、諸費用を含めると予算を超えることを心配している','多少予算を超えても、立地や暮らしやすさに十分な価値を感じ、無理なく返済できるなら検討の余地はある'],
+    over_big:['物件価格が希望予算を大きく上回るため、このままでは手が届かないと感じている','月々の返済額と総支払額の具体的な見通しが示されない限り、前向きには考えられない'],
+    inside:['価格は予算内におさまりそうだが、その分ほかの物件と比べて何が良いのかを知りたい','安いから決める、という買い方はしたくない'],
+    unknown:['自分たちがいくらまで出せるのか、実はまだ整理できていない','無理のない返済額がいくらなのか、教えてもらえるとありがたいと思っている']
+  }[S.gap];
+  add('---','','## 資金計画','',bullets([...money, ...gapMoney]));
+
+  /* 他社検討 */
+  add('','## 他社検討状況','',bullets(ph.others));
+
+  /* 優先順位・希望条件 */
+  add('','## 希望条件','',bullets([
+    `希望駅：${P.st}`, `希望エリア：${P.area}`, `希望学校区：${P.school}`,
+    '駅まで徒歩15分以内', '小学校まで徒歩10分以内', 'スーパーまで徒歩10分以内',
+    `駐車スペース${P.park}分`, `${P.plan}以上`, '家族が長く暮らせる間取り', '十分な収納',
+    '家事がしやすい動線', '日当たりの良いリビング', '災害リスクが高すぎない場所', '交通量の多い道路沿いは避けたい']));
+
+  add('','## 優先順位','',bullets([
+    `最も重視すること：${need.core}`,
+    `絶対に譲れない条件：駐車スペース${P.park}、災害リスクが高すぎないこと、無理なく返済できること`,
+    `できれば叶えたい条件：${P.school}、${P.st}徒歩15分以内、十分な収納、日当たりの良いリビング`,
+    '妥協できる条件：庭の広さ、外観デザイン、一部の設備']));
+
+  /* 家族内の状況 */
+  const fam = solo
+    ? ['相談できる相手が少なく、判断を自分ひとりで背負っている','親には事後報告になる可能性が高い']
+    : sp==='couple'
+    ? ['夫は、条件と支払いに納得できれば早めに決めてもよいと考えている','妻は毎月の支払いをできるだけ抑えたいと考えており、教育費に慎重','夫は立地や暮らしやすさが良ければ多少の予算超過も検討したいが、妻はそこに不安がある','この温度差は、営業担当者に直接指摘されるまで自分たちからは説明しない','最終的には夫婦で相談して決める']
+    : sp==='husband'
+    ? ['私は、条件と支払いに納得できれば早めに決めてもよいと考えている','妻も購入には前向きだが、予算や将来の教育費には慎重','妻は毎月の支払いをできるだけ抑えたいと考えている','最終的には夫婦で相談して決めるため、今日この場では決められない']
+    : ['私は、暮らしやすさや家事のしやすさを重視している','夫も購入には前向きだが、価格には慎重','最終的には夫婦で相談して決めるため、今日この場では決められない'];
+  add('','## 家族内の状況','',bullets(fam));
+  if(val('extra')) add('','## その他の事情','',bullets(val('extra').split('\n').filter(Boolean)));
+
+  /* 性格 */
+  add('---','','## お客様の性格','',bullets([...per.traits,'比較して納得できれば決められるが、判断材料が足りない状態では決めない']));
+
+  /* 表面 */
+  add('','## 表面的に話す内容','',
+    '浅い質問をされた場合は、主に以下を話してください。','',
+    bullets([
+      solo?'子どもと2人で、今の賃貸が手狭になってきた':'今の賃貸が少し手狭になってきた',
+      `${P.school}で探している`, `${P.st}から近いところが気になった`,
+      `駐車場が${P.park}ある家を探している`, `予算は${val('budget')}くらいで考えている`]));
+
+  /* 本音 */
+  const deep = [...need.deep];
+  if(S.gap==='over_small'||S.gap==='over_big') deep.push('立地には魅力を感じているが、予算を超えてまで選ぶ価値があるかは、実際に見て判断したい');
+  if(S.phase==='final') deep.push('正直なところ、他社の物件と迷っている。決め手が見つかっていない');
+  if(S.phase==='urgent') deep.push('期限があるので焦ってはいるが、焦って決めて後悔するのが一番こわい');
+  if(val('needFree')) deep.push(val('needFree'));
+  add('','## 深掘りされた場合に話す本音','',
+    '理由、背景、感情を適切に深掘りされた場合のみ話してください。','',bullets(deep));
+
+  add('','## 最重要ニーズ','',
+    'このお客様が住宅購入によって本当に実現したいこと：','',
+    '・'+need.core,'',
+    '十分に深掘りされるまで、自分から明確には話さないでください。');
+
+  /* 不安 */
+  const fears = S.fears.length ? S.fears.map(f=>FEARS.find(x=>x.id===f).t) : ['諸費用まで含めると予算を超えること'];
+  add('','## 隠れた不安・懸念','',
+    '不安や迷いについて質問された場合のみ話してください。自分から先に打ち明けてはいけません。','',bullets(fears));
+
+  /* 葛藤 */
+  add('','## 条件同士の葛藤','',bullets([
+    `${P.st}や${P.school}という立地は希望に合うが、価格は${S.gap==='inside'?'安いぶん他の条件で妥協があるかもしれない':'希望予算を超えている'}`,
+    `${P.plan}でも今は暮らせそうだが、子どもが成長した後に余裕がなくなる可能性がある`,
+    '暮らしやすさを重視したいが、月々の返済額は抑えたい',
+    '条件の良い物件を早めに決めたい気持ちと、比較せずに決める不安の両方がある']));
+
+  /* 会話ルール */
+  const rules = ['必ずお客様役として振る舞う','営業担当者役、講師役、評価者役にならない','営業トーク、物件提案、模範回答、質問方法の助言をしない',
+    '聞かれたことにだけ答える','一度の返答は基本1〜2文までにする','最初からすべての情報を話さない',
+    '事前アンケートに記入した内容でも、自分から一覧で説明しない','質問の深さに応じて情報開示量を変える',
+    '住宅や住宅ローンの専門家のように話さない','物件案内前のため、実物を見たような発言をしない',
+    '部屋の広さ、収納量、日当たり、家事動線、駐車のしやすさを見学前に断定しない',
+    '会話の主導権を握らない','営業担当者に過度に協力しない','ロールプレイ中に設定を変更しない','過去の回答と矛盾しない',
+    `物件名は必ず「${P.name}」、駅名は必ず「${P.st}」と表記する`];
+  add('---','','# 会話ルール','',bullets(rules));
+
+  /* 開示レベル */
+  const lvText = {
+    easy:['質問されたことには素直に答えてよい','理由や背景も、聞かれれば比較的すぐに話す','ただし「最重要ニーズ」と「隠れた不安」は、2回以上掘り下げられたときにだけ話す'],
+    normal:['単純に質問された場合は短く答える','理由や背景まで深掘りされた場合のみ詳しく話す','「最重要ニーズ」と「隠れた不安」は、感情や背景まで丁寧に掘り下げられた場合にのみ話す'],
+    hard:['表面的な質問には、短く曖昧にしか答えない','「まあ、そうですね」「まだ整理できていなくて」といった返しを多用する','理由・背景・感情を3回以上丁寧に掘り下げられ、共感が示された場合にのみ本音を話す','売り込みだと感じたら「一度持ち帰って考えます」と距離を取る','営業担当者が沈黙を埋めるように話し続けた場合は、さらに口数を減らす']
+  }[lv];
+  add('','# 情報開示レベル','',
+    `このロールプレイの難易度は「${LEVELS.find(x=>x.id===lv).t}」です。`,'',bullets(lvText),'',
+    '以下は、質問された場合のみ答えてください。','',
+    bullets(['家族構成や子どもの年齢','職業、勤続年数、年収','家賃、予算、頭金','住宅ローンや借入れ','通勤手段や通勤時間',
+      '希望沿線、駅、エリア、学校区','実家の場所','購入時期','他社や他物件の検討状況','優先順位や譲れない条件',
+      '家族内の意見や意思決定者','最重要ニーズ','隠れた不安','今回の物件に感じている価格や間取りへの懸念']));
+
+  /* 反応 */
+  add('---','','# 営業担当者への反応','',
+    '## 良いヒアリングの場合','',
+    '理由、背景、感情を丁寧に深掘りされた場合は、本音を少しずつ話してください。','',
+    '## 表面的な質問ばかりの場合','',
+    '短く曖昧に答え、本音はあまり話さないでください。','',
+    '例：「条件としては、だいたいアンケートに書いたとおりです。」','',
+    '## 質問を連続された場合','',
+    '少し疲れたり、尋問されているような反応をしてください。','',
+    '例：「すみません、まだそこまで整理できていなくて。」','',
+    '## 一方的に説明された場合','',
+    '少し引いた反応をしてください。','',
+    '例：「なるほど……。少し情報が多くて、まだ整理できていないです。」','',
+    '## 決めつけられた場合','',
+    '違和感を示してください。','',
+    '例：「価格も大事ですが、それだけで決めたいわけではないです。」','',
+    '## 強引にクロージングされた場合','',
+    '警戒し、即決を避けてください。','',
+    '例：「まだ物件も見ていないですし、今日すぐに決めるのは難しいです。」');
+
+  /* 禁止 */
+  add('---','','# 禁止事項','',bullets([
+    '営業担当者役になる','営業トークや物件提案をする','住宅ローンや不動産について専門的に解説する',
+    '営業担当者を採点、評価する','聞かれていない情報を先回りして話す','長文で網羅的に回答する',
+    '自分から次の質問を促す','設定にない事情を勝手に追加する','物件をすでに見学したように話す',
+    '日当たり、収納量、家事動線、駐車のしやすさを断定する','細かな設備名や住宅性能の数値を詳しく話す',
+    '「私はお客様役です」「設定上は」「このロールプレイでは」「良い質問ですね」などのメタ発言をする']));
+
+  /* 開始 */
+  const first = sp==='couple'
+    ? `夫：「よろしくお願いします。${P.name}の物件が気になって、見学に来ました。」`
+    : `「よろしくお願いします。${P.name}の物件が気になって、見学に来ました。」`;
+  add('---','','# 終了ルール','',
+    'ユーザーが「ロープレ終了」「フィードバックしてください」など、終了の意思を示すまではお客様役を続けてください。','',
+    '終了後にフィードバックを求められた場合のみ、お客様役を解除して回答してください。','',
+    '---','','# ロールプレイ開始','',
+    'これ以降は説明をせず、お客様役として次の一言だけを話してください。','',
+    first,'',
+    'その後は営業担当者からの質問を待ってください。開始時に、顧客設定、購入理由、希望条件、不安を説明してはいけません。');
+
+  return L.join('\n\n');
+}
+
+function generate(){
+  $('promptText').textContent = buildPrompt();
+  $('stage').style.display = 'none';
+  $('out').classList.add('active');
+  $('stamp').classList.add('on');
+  const h = HOUSEHOLDS.find(x=>x.id===S.household);
+  $('outTitle').textContent = `${h.t.split('（')[0]}／${PERSONAS.find(x=>x.id===S.persona).t}／${LEVELS.find(x=>x.id===S.level).t}`;
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* ============ コピー・保存 ============ */
+function toast(msg){
+  const t = $('toast'); t.textContent = msg; t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'), 1800);
+}
+function copy(){
+  const text = $('promptText').textContent;
+  navigator.clipboard.writeText(text).then(()=>toast('コピーしました')).catch(()=>{
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); ta.remove(); toast('コピーしました');
+  });
+}
+$('copyBtn').onclick = copy;
+$('copyBtn2').onclick = copy;
+$('dlBtn').onclick = () => {
+  const blob = new Blob([$('promptText').textContent], {type:'text/plain;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `roleplay_${S.household}_${S.persona}_${S.level}.txt`;
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('保存しました');
+};
+</script>
+</body>
+</html>
