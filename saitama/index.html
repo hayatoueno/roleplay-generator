@@ -242,6 +242,11 @@
               <label for="pFeature">資料に載っている物件の特徴（お客様が知っている範囲）</label>
               <input type="text" id="pFeature" placeholder="例：南向きの庭、LDK18帖、全居室収納付き">
             </div>
+            <div class="field">
+              <label for="pReading">読み方の指定（任意）<small style="font-weight:400;color:var(--ink-30);margin-left:6px">AIが読み間違えそうな語を平仮名にします。「漢字=よみ」をカンマ区切りで</small></label>
+              <input type="text" id="pReading" placeholder="例：石神井=しゃくじい、三原台=みはらだい">
+              <p class="hint" style="margin:6px 0 0">登録済みの4物件の地名・駅名・学校名などは、入力しなくても自動で平仮名になります。</p>
+            </div>
           </div>
 
           <!-- STEP 2 -->
@@ -942,8 +947,33 @@ function buildPrompt(){
   return L.join('\n\n');
 }
 
+/* ============ 読み間違い対策：AIの音声で読み間違えやすい語を平仮名に置き換える ============ */
+const READINGS = [
+  ['～尚雅shoga～宮原','しょうが みやはら'],
+  ['～青嶺seirei～さいたま新都心','せいれい さいたま新都心'],
+  ['～憩ikoi～石神井公園駅','いこい しゃくじいこうえん駅'],
+  ['～彩irodori～国立','いろどり くにたち'],
+  ['石神井公園','しゃくじいこうえん'], ['石神井','しゃくじい'],
+  ['大泉学園','おおいずみがくえん'], ['比丘尼橋','びくにばし'],
+  ['三原台','みはらだい'], ['泉新小学校','いずみしん小学校'],
+  ['埼玉新都市交通伊奈線','埼玉新都市交通 いな線'], ['伊奈線','いな線'],
+  ['東宮原','ひがしみやはら'], ['加茂宮','かもみや'], ['宮原','みやはら'], ['土呂','とろ'],
+  ['大砂土','おおさど'], ['植竹','うえたけ'],
+  ['見沼区','みぬま区'], ['東新井','ひがしあらい'], ['海老沼','えびぬま'], ['大和田','おおわだ'],
+  ['国分寺市光町','こくぶんじ市ひかり町'], ['光町','ひかり町'], ['国分寺','こくぶんじ'], ['国立','くにたち'],
+  ['帖','畳']
+];
+function userReadings(){
+  return val('pReading').split(/[,、，\n]/).map(s => s.split(/[=＝]/).map(x => x.trim()))
+    .filter(p => p.length===2 && p[0] && p[1]);
+}
+function applyReadings(text){
+  const pairs = [...userReadings(), ...READINGS].sort((a,b) => b[0].length - a[0].length);
+  return pairs.reduce((t,[k,v]) => t.split(k).join(v), text);
+}
+
 function generate(){
-  $('promptText').textContent = buildPrompt();
+  $('promptText').textContent = applyReadings(buildPrompt());
   $('stage').style.display = 'none';
   $('out').classList.add('active');
   $('stamp').classList.add('on');
