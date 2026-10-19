@@ -204,18 +204,26 @@
           <!-- STEP 1 -->
           <div class="step active" data-step="1">
             <h2>どんな電話の練習ですか</h2>
-            <p class="hint">電話をかけるきっかけと、お客様が問い合わせた物件の情報です。物件欄は例なので、自社の物件に書き換えてください。</p>
+            <p class="hint">電話をかけるきっかけと、お客様が問い合わせた物件の情報です。物件を選ぶと下の欄に資料の情報が入ります。書き換えても構いません。</p>
             <div class="field">
               <div class="legend">電話の場面</div>
               <div class="choices" id="sceneChoices"></div>
             </div>
             <div class="field">
-              <div class="legend">拠点 <small>選ぶと物件欄に例が入ります</small></div>
-              <div class="choices two" id="branchChoices"></div>
+              <div class="legend">物件 <small>物件資料から登録済み</small></div>
+              <div class="choices two" id="propChoices"></div>
+            </div>
+            <div class="field">
+              <div class="legend">販売状況 <small>予告物件は価格を伝えずに案内へつなげる練習になります</small></div>
+              <div class="choices two" id="statusChoices"></div>
             </div>
             <div class="row">
               <div class="field"><label for="pName">物件名</label><input type="text" id="pName"></div>
               <div class="field"><label for="pSource">問い合わせ経路</label><input type="text" id="pSource" value="SUUMO"></div>
+            </div>
+            <div class="row">
+              <div class="field"><label for="pStart">販売開始予定</label><input type="text" id="pStart"></div>
+              <div class="field"><label for="pUnits">総戸数</label><input type="text" id="pUnits"></div>
             </div>
             <div class="row">
               <div class="field"><label for="pStation">最寄り駅</label><input type="text" id="pStation"></div>
@@ -226,12 +234,12 @@
               <div class="field"><label for="pSchool">学校区</label><input type="text" id="pSchool"></div>
             </div>
             <div class="row3">
-              <div class="field"><label for="pPrice">価格</label><input type="text" id="pPrice"></div>
+              <div class="field"><label for="pPrice">価格 <small style="font-weight:400;color:var(--ink-30)">予告物件は使いません</small></label><input type="text" id="pPrice"></div>
               <div class="field"><label for="pPlan">間取り</label><input type="text" id="pPlan"></div>
               <div class="field"><label for="pPark">駐車スペース</label><input type="text" id="pPark"></div>
             </div>
             <div class="field">
-              <label for="pFeature">お客様が資料で見て気になった点（任意）</label>
+              <label for="pFeature">資料に載っている物件の特徴（お客様が知っている範囲）</label>
               <input type="text" id="pFeature" placeholder="例：南向きの庭、LDK18帖、全居室収納付き">
             </div>
           </div>
@@ -383,9 +391,39 @@ const SCENES = [
   {id:'reserve', t:'来場予約のお客様へ電話し、来場前にヒアリングする', d:'見学の予約は入っている。ゴールは希望条件・ネックを聞き出し、来場当日の段取りに合意すること。'}
 ];
 
-const BRANCHES = [
-  {id:'saitama', t:'埼玉', f:{pName:'れいめい ななさと駅 12号地',pStation:'ななさと駅',pWalk:'徒歩10分',pArea:'さいたま市見沼区',pSchool:'七里小学校区',pPrice:'3,990万円',pPlan:'3LDK',pPark:'2台'}},
-  {id:'mitaka', t:'三鷹', f:{pName:'（例）物件名を入力',pStation:'（例）最寄り駅',pWalk:'徒歩15分',pArea:'（例）三鷹市',pSchool:'（例）〇〇小学校区',pPrice:'5,980万円',pPlan:'3LDK',pPark:'1台'}}
+/* 物件：グランディハウス様の物件資料（2026年10月受領）より */
+const PROPS = [
+  {id:'shoga', t:'～尚雅shoga～宮原', d:'埼玉｜さいたま市北区・東宮原駅徒歩7分・予告物件', branch:'埼玉', status:'pre',
+   f:{pName:'～尚雅shoga～宮原',pStart:'2027年6月下旬販売開始予定',pUnits:'全8戸',
+      pStation:'埼玉新都市交通伊奈線「東宮原」駅',pWalk:'徒歩7分（JR高崎線「宮原」駅へは徒歩15分）',
+      pArea:'さいたま市北区宮原町',pSchool:'大砂土小学校（徒歩13分）・植竹中学校（徒歩14分）',
+      pPrice:'未定',pPlan:'3LDK（LDK最大20.3帖）',pPark:'1〜2台',
+      pFeature:'全邸敷地30坪超、長期優良住宅、制震ダンパー、ZEH水準の高断熱住宅、オール電化、4駅3路線が利用可能'}},
+  {id:'seirei', t:'～青嶺seirei～さいたま新都心', d:'埼玉｜さいたま市見沼区・新都心駅へバス・一部価格公開', branch:'埼玉', status:'open',
+   f:{pName:'～青嶺seirei～さいたま新都心',pStart:'販売中（一部号地は抽選販売）',pUnits:'全23戸',
+      pStation:'JR「さいたま新都心」駅（バス約15分）',pWalk:'バス停「団地入口」まで徒歩3〜4分',
+      pArea:'さいたま市見沼区東新井',pSchool:'海老沼小学校（徒歩12〜13分）',
+      pPrice:'3,490万円〜（公開中の号地）',pPlan:'4LDK（LDK最大18.7帖）',pPark:'2台',
+      pFeature:'カースペース2台、さいたま新都心・大宮・北浦和の3駅へバス、長期優良住宅（申請中）、制震ダンパー、ZEH水準、オール電化'}},
+  {id:'ikoi', t:'～憩ikoi～石神井公園駅', d:'三鷹｜練馬区三原台・小中学校徒歩4分圏・予告物件', branch:'三鷹', status:'pre',
+   f:{pName:'～憩ikoi～石神井公園駅',pStart:'2026年12月下旬販売開始予定',pUnits:'全8戸',
+      pStation:'西武池袋線「大泉学園」駅・「石神井公園」駅',pWalk:'徒歩19〜20分（自転車8〜9分・バス停まで徒歩2〜3分）',
+      pArea:'練馬区三原台',pSchool:'泉新小学校（徒歩4分）・三原台中学校（徒歩3〜4分）',
+      pPrice:'未定',pPlan:'3LDK・4LDK（LDK最大19.6帖）',pPark:'1〜2台',
+      pFeature:'小・中学校が徒歩4分圏内、2駅利用可能、制震ダンパー、LDK最大19.6帖'}},
+  {id:'irodori', t:'～彩irodori～国立', d:'三鷹｜国分寺市光町・小学校徒歩2分・予告物件', branch:'三鷹', status:'pre',
+   f:{pName:'～彩irodori～国立',pStart:'2027年2月下旬販売開始予定',pUnits:'全14戸',
+      pStation:'JR中央線「国立」駅',pWalk:'徒歩17分（バス停まで徒歩1〜2分）',
+      pArea:'国分寺市光町',pSchool:'第二小学校（徒歩2分）・第三中学校（徒歩10分）',
+      pPrice:'未定',pPlan:'3LDK・4LDK（LDK最大22.2帖）',pPark:'2台',
+      pFeature:'全棟敷地36坪超、全邸カースペース2台、ガス温水式床暖房、各邸に防犯カメラ、長期優良住宅（申請中）、ZEH水準'}},
+  {id:'custom', t:'その他の物件（自分で入力）', d:'下の欄に物件資料の内容を入力してください。', branch:'', status:'pre',
+   f:{pName:'',pStart:'',pUnits:'',pStation:'',pWalk:'',pArea:'',pSchool:'',pPrice:'',pPlan:'',pPark:'',pFeature:''}}
+];
+
+const STATUSES = [
+  {id:'pre', t:'予告物件（価格は非公開）', d:'お客様に価格は伝えず、予算などを聞いて案内へつなげる。'},
+  {id:'open', t:'価格公開中', d:'お客様は資料で価格を知っている。'}
 ];
 
 const SPEAKERS = [
@@ -438,7 +476,7 @@ const NECK_GROUPS = [
   {g:'資金', items:[
     {id:'fund_afford', t:'うちの収入で買えるのか分からない', d:'ローンの仕組みが分からず、最初から「無理かも」と思っている。',
      surface:'まだお金のことは全然考えていなくて',
-     hidden:['自分たちの年収で、この価格の家が買えるとは思っていない','住宅ローンでいくら借りられるのか、月々いくらになるのか全く分からない','実は今の家賃くらいの支払いで買えるなら、かなり興味がある','お金のことを聞くのが恥ずかしく、自分からは聞けない'],
+     hidden:['自分たちの年収で、この物件のような新築一戸建てが買えるとは思っていない','住宅ローンでいくら借りられるのか、月々いくらになるのか全く分からない','実は今の家賃くらいの支払いで買えるなら、かなり興味がある','お金のことを聞くのが恥ずかしく、自分からは聞けない'],
      gate:'予算や年収を聞かれた最初の1回は「まだ全然考えていなくて」と濁す。営業が月々の支払い例や今の家賃との比較を示した後に聞かれたら、「今の家賃くらいなら…」と本音に近いことを話す',
      resolve:'月々の返済イメージ（今の家賃との比較など）が具体的に示され、「来場時に資金の相談もできる」と分かる'},
     {id:'fund_down', t:'頭金がほとんどない・諸費用が不安', d:'貯金が少なく、頭金ゼロで買えるのか、諸費用がいくらかかるか不安。',
@@ -543,7 +581,7 @@ const LEVELS = [
 
 /* ============ 状態 ============ */
 const S = {
-  scene:'inquiry', branch:'saitama', speaker:'wife', household:'mid', loan:'none',
+  scene:'inquiry', prop:'shoga', status:'pre', speaker:'wife', household:'mid', loan:'none',
   necks:['fund_afford','time_later'], situation:'home', motive:'casual',
   persona:'careful', level:'normal'
 };
@@ -562,18 +600,19 @@ function radios(host, list, key){
   el.querySelectorAll('input').forEach(i => i.addEventListener('change', () => {
     S[key] = i.value;
     if(key==='household') applyHousehold(i.value);
-    if(key==='branch') applyBranch(i.value);
+    if(key==='prop') applyProp(i.value);
     paintKarte();
   }));
 }
 function syncRadios(){
-  [['sceneChoices','scene'],['branchChoices','branch'],['speakerChoices','speaker'],['householdChoices','household'],
+  [['sceneChoices','scene'],['propChoices','prop'],['statusChoices','status'],['speakerChoices','speaker'],['householdChoices','household'],
    ['loanChoices','loan'],['situationChoices','situation'],['motiveChoices','motive'],['personaChoices','persona'],['levelChoices','level']]
   .forEach(([host,key]) => document.querySelectorAll(`input[name=${host}]`).forEach(i => i.checked = i.value===S[key]));
   paintNecks();
 }
 radios('sceneChoices', SCENES, 'scene');
-radios('branchChoices', BRANCHES, 'branch');
+radios('propChoices', PROPS, 'prop');
+radios('statusChoices', STATUSES, 'status');
 radios('speakerChoices', SPEAKERS, 'speaker');
 radios('householdChoices', HOUSEHOLDS, 'household');
 radios('loanChoices', LOANS, 'loan');
@@ -618,11 +657,13 @@ function applyHousehold(id){
   const h = HOUSEHOLDS.find(x => x.id===id);
   Object.entries(h.f).forEach(([k,v]) => { if($(k)) $(k).value = v; });
 }
-function applyBranch(id){
-  const b = BRANCHES.find(x => x.id===id);
-  Object.entries(b.f).forEach(([k,v]) => { if($(k)) $(k).value = v; });
+function applyProp(id){
+  const p = PROPS.find(x => x.id===id);
+  Object.entries(p.f).forEach(([k,v]) => { if($(k)) $(k).value = v; });
+  S.status = p.status;
+  document.querySelectorAll('input[name=statusChoices]').forEach(i => i.checked = i.value===S.status);
 }
-applyBranch(S.branch);
+applyProp(S.prop);
 applyHousehold(S.household);
 paintNecks();
 
@@ -635,7 +676,7 @@ function set(id, text){
 function paintKarte(){
   const h = HOUSEHOLDS.find(x=>x.id===S.household);
   set('k-sc', S.scene==='inquiry' ? '資料請求 → 来場誘導' : '来場予約 → 事前ヒアリング');
-  set('k-p', `${val('pName')}／${val('pPrice')}・${val('pPlan')}`);
+  set('k-p', `${val('pName')}／${S.status==='pre'?'予告（価格非公開）':val('pPrice')}・${val('pPlan')}`);
   set('k-s', SPEAKERS.find(x=>x.id===S.speaker).t);
   set('k-f', `${h.t.split('（')[0]}／${val('kids')}・世帯${val('income')}`);
   set('k-m', `予算${val('budget')}・${val('down')}・月々${val('monthly')}`);
@@ -689,7 +730,9 @@ function buildPrompt(){
   const necks = S.necks.map(id => NECKS.find(x=>x.id===id));
   const inq = S.scene==='inquiry';
   const P = {name:val('pName'),st:val('pStation'),walk:val('pWalk'),area:val('pArea'),school:val('pSchool'),
-             price:val('pPrice'),plan:val('pPlan'),park:val('pPark'),src:val('pSource'),feat:val('pFeature')};
+             price:val('pPrice'),plan:val('pPlan'),park:val('pPark'),src:val('pSource'),feat:val('pFeature'),
+             start:val('pStart'),units:val('pUnits')};
+  const pre = S.status==='pre';
   const isH = S.speaker==='husband';
 
   const nm  = s => s.replace(/[（(][^）)]*[）)]/g,'').trim();
@@ -727,6 +770,8 @@ function buildPrompt(){
     '## 3．短く答える','',
     '電話なので、1回の返答は原則1文、長くても2文までにしてください。','',
     '聞かれたことだけに答え、聞かれていない情報・理由・背景を自分から付け足してはいけません。','',
+    pre ? '例外として、後述の「価格について」に定められた価格の質問だけは、自分から1回行ってください。' : null,
+    pre ? '' : null,
     '## 4．回答情報の優先順位','',
     '1. このプロンプトに明記された設定情報',
     '2. 設定情報から自然に推測できる情報',
@@ -762,8 +807,12 @@ function buildPrompt(){
 
   /* 物件について */
   const known = [
-    `${P.st}から${P.walk}程度`, P.school ? `${P.school}` : '', `所在地は${P.area}`,
-    `価格は${P.price}から`, P.plan, `駐車スペース${P.park}`, P.feat ? `${P.feat}が良さそうだと思った` : ''
+    `${P.st}から${P.walk}`, P.school ? `学校：${P.school}` : '', `所在地は${P.area}`,
+    P.units ? `総戸数${P.units}の分譲地` : '',
+    pre ? '価格は資料に載っておらず「未定」となっている' : `価格は${P.price}`,
+    pre && P.start ? `${P.start}（それまでは契約や申込みはできないと書いてある）` : (P.start ? P.start : ''),
+    P.plan ? `間取り：${P.plan}` : '', P.park ? `駐車スペース${P.park}` : '',
+    P.feat ? `資料に書いてあった特徴：${P.feat}` : ''
   ];
   add('---','','# 今回の物件について','',
     `対象物件は「${P.name}」です。`,'',
@@ -772,11 +821,24 @@ function buildPrompt(){
     '設備の商品名や住宅性能の具体的な数値など、専門的な知識もありません。','',
     inq ? `問い合わせた理由を聞かれたら「${mot.surface}」と答えてください。` : `予約した理由を聞かれたら「${mot.surface}」と答えてください。`);
 
+  /* 価格について（予告物件） */
+  if(pre) add('---','','# 価格について（予告物件）','',
+    'この物件は販売開始前の予告物件で、価格はまだ公開されていません。あなたは価格がいくらなのかを一番気にしています。','',
+    '## 価格の質問','',
+    `会話の序盤〜中盤（営業担当者の名乗りと用件の後）で、自分から一度だけ「ちなみに、価格っていくらくらいになりそうなんですか？」と聞いてください。`,'',
+    '## 営業担当者の答え方による反応','',bullets([
+      '「まだ決まっていない」「お伝えできない」とだけ言われ、理由や代わりの話がない場合 → 「そうなんですね…価格が分からないと、見に行っていいのか判断できなくて」と渋る。来場への前向きさは上がらない',
+      '価格が未定である理由（販売開始前であること）を説明したうえで、予算・月々の支払い・今の家賃などを聞いてくれた場合 → 納得して、聞かれた予算の質問に答える。信頼度が1段階上がる',
+      '「ご予算に合うかどうかも含めて、来場時に資金面も一緒にご相談できます」など、価格が分からなくても見に行く意味を示してくれた場合 → 「それなら一度見てみてもいいかも」と前向きになる',
+      '営業担当者が具体的な価格を答えた場合は、その金額をそのまま受け止める（評価やコメントはしない）']),'',
+    '価格を自分で推測したり、「〇〇万円くらいですよね」と金額を決めつけたりしてはいけません。');
+
   /* 資金 */
   add('---','','# 資金まわり','',
     '以下は聞かれた場合にだけ、聞かれた分だけ答えてください。','',bullets([
       `なんとなくの予算：${val('budget')}`, `貯金・頭金：${val('down')}`, `月々の支払い：${val('monthly')}を希望`,
       'ボーナス払いは積極的には考えていない', '住宅ローンや諸費用の詳しい仕組みは分からない',
+      pre ? '物件の価格が分からないので、自分たちの予算で届くのか判断できていない' : '',
       S.loan!=='none' ? `${loan.t}ので、借りられる額に影響しないか気にしている` : ''
     ]));
 
@@ -800,7 +862,8 @@ function buildPrompt(){
     '## 信頼度が上がる','',bullets([
       '冒頭で会社名・名前・用件を名乗り、「今お時間よろしいですか」と都合を確認した',
       '来場や物件の説明より先に、こちらの状況（きっかけ・家族・今の住まいなど）を2つ以上質問した',
-      'こちらの不安を否定せず受け止め、具体的に答えた']),'',
+      'こちらの不安を否定せず受け止め、具体的に答えた',
+      pre ? '価格を聞いたときに、未定である理由を説明したうえで、予算や希望を聞いてくれた' : '']),'',
     '## 信頼度が下がる','',bullets([
       '名乗りや都合の確認がなく、いきなり本題に入った',
       '物件や会社の説明を一方的に30秒以上続けた',
@@ -843,7 +906,7 @@ function buildPrompt(){
     '物件をすでに見学したように話す',
     isH ? '自分を「主人」「旦那」「ご主人」と呼ぶ' : '自分を「奥様」「奥さん」「家内」と呼ぶ',
     `物件名を「${P.name}」以外の表記で書く`,
-    `物件価格（${P.price}から）を自分の予算（${val('budget')}）と混同する`,
+    pre ? '物件の価格を自分で作ったり、推測で断定したりする' : `物件価格（${P.price}）を自分の予算（${val('budget')}）と混同する`,
     'AI、設定、プロンプト、ロールプレイ、評価などを意識させるメタ発言をする']));
 
   /* 終了ルール */
