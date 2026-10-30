@@ -302,9 +302,9 @@
           <!-- STEP 4 -->
           <div class="step" data-step="4">
             <h2>このお客様のネックはどれですか<span class="counter" id="neckCount"></span></h2>
-            <p class="hint">来場や商談の妨げになっている事情です。<strong>1つ</strong>選んでください。お客様は聞かれるまで自分からは話しません。</p>
+            <p class="hint">来場や商談の妨げになっている事情です。<strong>2つ</strong>選んでください（同じ分類からは1つまで）。お客様は聞かれるまで自分からは話しません。</p>
             <div id="neckChoices"></div>
-            <div class="warn" id="neckWarn">ネックを1つ選んでください。</div>
+            <div class="warn" id="neckWarn">ネックを2つ選んでください。</div>
           </div>
 
           <!-- STEP 5 -->
@@ -622,7 +622,7 @@ const LEVELS = [
 /* ============ 状態 ============ */
 const S = {
   scene:'inquiry', prop:'shoga', status:'pre', speaker:'wife', household:'mid', loan:'none',
-  necks:['fund_afford'], situation:'home', motive:'casual',
+  necks:['fund_afford','time_later'], situation:'home', motive:'casual',
   persona:'careful', level:'normal'
 };
 const $ = id => document.getElementById(id);
@@ -662,27 +662,34 @@ radios('personaChoices', PERSONAS, 'persona');
 radios('levelChoices', LEVELS, 'level');
 $('loanChoices').classList.add('two');
 
-/* ネック：1つだけ選ぶ */
+/* ネック：2つまで・同じ分類から1つまで */
 $('neckChoices').innerHTML = NECK_GROUPS.map(g => `
   <div class="neck-group">
     <div class="g-title">${g.g}</div>
     <div class="choices">${g.items.map(o => `
-      <label class="choice" data-g="${g.g}">
-        <input type="radio" name="neckPick" value="${o.id}">
+      <label class="choice multi" data-g="${g.g}">
+        <input type="checkbox" value="${o.id}">
         <span class="mark"></span>
         <span class="c-title">${o.t}<span class="c-desc">${o.d}</span></span>
       </label>`).join('')}</div>
   </div>`).join('');
 $('neckChoices').querySelectorAll('input').forEach(i => i.addEventListener('change', () => {
-  if(i.checked) S.necks = [i.value];
+  const n = NECKS.find(x => x.id===i.value);
+  if(i.checked){
+    S.necks = S.necks.filter(id => NECKS.find(x=>x.id===id).g !== n.g);
+    S.necks.push(n.id);
+  } else {
+    S.necks = S.necks.filter(id => id!==n.id);
+  }
   paintNecks(); paintKarte();
 }));
 function paintNecks(){
   $('neckChoices').querySelectorAll('label').forEach(l => {
     const i = l.querySelector('input');
     i.checked = S.necks.includes(i.value);
+    l.classList.toggle('disabled', !i.checked && S.necks.length>=2);
   });
-  $('neckCount').textContent = `${S.necks.length} / 1`;
+  $('neckCount').textContent = `${S.necks.length} / 2`;
   $('neckWarn').classList.remove('on');
 }
 
@@ -733,7 +740,7 @@ function show(n){
   window.scrollTo({top:0, behavior:'smooth'});
 }
 $('nextBtn').onclick = () => {
-  if(step===4 && S.necks.length!==1){ $('neckWarn').classList.add('on'); return; }
+  if(step===4 && S.necks.length!==2){ $('neckWarn').classList.add('on'); return; }
   if(step===LAST) generate(); else show(step+1);
 };
 $('prevBtn').onclick = () => show(Math.max(1, step-1));
@@ -748,7 +755,8 @@ $('randomBtn').onclick = () => {
   S.household = pick(HOUSEHOLDS).id; applyHousehold(S.household);
   S.loan = pick(LOANS).id; S.situation = pick(SITUATIONS).id; S.motive = pick(MOTIVES).id;
   S.persona = pick(PERSONAS).id; S.level = pick(LEVELS).id;
-  S.necks = [pick(NECKS).id];
+  const gs = [...NECK_GROUPS].sort(()=>Math.random()-.5).slice(0,2);
+  S.necks = gs.map(g => pick(g.items).id);
   syncRadios(); paintKarte();
   toast('おまかせで埋めました（場面・拠点・物件はそのまま）');
 };
@@ -779,7 +787,7 @@ function buildPrompt(){
   const bullets = a => a.filter(Boolean).map(x=>'・'+x).join('\n');
 
   const month = new Date().getMonth() + 1;
-  const n = necks[0];   /* ネックは1つ */
+  const MK = ['①','②'];
   const dl = t => t.replace(/\{期限\}/g, h.deadline);
   const end = t => /[。…？]$/.test(t) ? t : t + '。';
   const act = inq ? '来場' : '当日の段取りへの同意';
@@ -793,6 +801,7 @@ function buildPrompt(){
     normal:'「話すきっかけ」にある質問をされたら、本当の気持ちを話してください。それまでは表向きの言い方で答えます。',
     hard:'「話すきっかけ」にある質問をされ、さらに気持ちに寄り添いながら掘り下げられたときだけ、本当の気持ちを話してください。それまでは表向きの言い方で短く答えます。'
   }[S.level];
+  const acceptWhen = S.level==='easy' ? '①②のどちらか1つがすっきりしている' : '①②の2つとも、すっきりしている';
 
   /* あなたの役 */
   add('# あなたの役','',
@@ -858,31 +867,38 @@ function buildPrompt(){
   if(pre) add('---','','# 価格について','',
     '価格は知りません。来場の話が出る前に、営業担当者が物件や会社について説明をして質問をしていないとき（あいさつやお礼のときは除く）、その返事として一度だけ「ちなみに、価格っていくらくらいになりそうなんですか？」とだけ聞いてください（ほかの言葉はつけません）。すっきりしたときの一言を返す場面では聞きません。営業担当者の答えはそのまま受け止め、それ以降は価格を理由にためらわないでください。価格を自分で推測しないでください。');
 
-  /* ためらっている理由（ネックは1つ） */
-  add('---','',`# ${inq?'来場をためらっている理由':'当日を前向きに迎えられない理由'}（1つだけ）`,'',
-    `理由は「${n.g}」の1つだけです。それ以外のことを、${act}をためらう理由にしないでください。${reveal}営業担当者の説明が「すっきりする条件」の内容に当てはまれば、言い回しが違ってもすっきりします。「大丈夫ですよ」など根拠のない言葉だけでは、すっきりしません。`,'',
-    `## ${n.g}：${n.t}`,
+  /* ためらっている理由（ネック） */
+  const neckBlocks = necks.map((n,i) => [
+    `## ${MK[i]} ${n.g}：${n.t}`,
     `・表向きの言い方（本当の気持ちを話す前に、このことを聞かれたとき）：「${end(n.surface)}」`,
     `・断るときの一言：「${n.refuse}」`,
     `・本当の気持ち：${n.feel.map(dl).join('／')}`,
     `・話すきっかけ：${dl(n.ask)}`,
     `・すっきりする条件：${dl(n.fix)}`,
-    `・すっきりしたら：「${n.ok}」と返す。そのあとは、この理由を二度と口にしない`);
+    `・すっきりしたら：「${n.ok}」と返す。そのあとは、この理由を二度と口にしない`
+  ].join('\n'));
+  add('---','',`# ${inq?'来場をためらっている理由':'当日を前向きに迎えられない理由'}（この2つだけ）`,'',
+    `理由は次の①②だけです。それ以外のことを、${act}をためらう理由にしないでください。${reveal}営業担当者の説明が「すっきりする条件」の内容に当てはまれば、言い回しが違ってもすっきりします。「大丈夫ですよ」など根拠のない言葉だけでは、すっきりしません。`,'',
+    neckBlocks.join('\n\n'));
 
   /* 来場の誘い（段取りの提案）への答え方 */
-  add('---','',`# ${inq?'来場の誘い':'当日の段取りの提案'}への答え方`,'',bullets([
-      inq ? `まだすっきりしていない → 「${n.refuse}」と言って断る。日付・曜日・時間は答えない`
-          : 'まだすっきりしていない → 「はい、一応。」と答え、前向きには同意しない',
-      inq ? 'すっきりした後 → 必ず「じゃあ一度見てみようかな。」と応じ、日時を決める（曜日や時間も答える）。前に断ったことは関係ない'
-          : 'すっきりした後 → 必ず提案に前向きに同意し、「当日よろしくお願いします。」と確約する。前に断ったことは関係ない',
-      `「ほかに気になることは？」など、気がかりを聞かれたら（聞き方は問わない）、まだすっきりしていなければ「${n.refuse}」、すっきりした後なら「特にはないです。」`
+  const refuseEx = necks.map((n,i) => `${MK[i]}は「${n.refuse}」`).join('、');
+  add('---','',`# ${inq?'来場の誘い':'当日の段取りの提案'}への答え方`,'',
+    `${inq?'来場に誘われる':'段取りを提案される'}たびに、ここまでの会話で①②が「すっきりする条件」を満たしたかを確かめてください。前に断ったことは関係ありません。`,'',bullets([
+      inq ? `${acceptWhen} → 「じゃあ一度見てみようかな。」と応じ、日時を決める（曜日や時間も答える）`
+          : `${acceptWhen} → 提案に前向きに同意し、「当日よろしくお願いします。」と確約する`,
+      inq ? `そうでない → まだすっきりしていない理由の「断るときの一言」だけを言って断る（${refuseEx}）。日付・曜日・時間は答えない`
+          : `そうでない → 「はい、一応。」と答え、前向きには同意しない`,
+      '「ほかに気になることは？」「何か気になっていることは？」など、気がかりを聞かれたら（聞き方は問わない）、まだすっきりしていない理由の「断るときの一言」を1つ言う。まだすっきりしていない理由があるうちは「特にはないです」と言わない。①②が2つともすっきりしていれば「特にはないです。」'
     ]),'',
     '## 会話の例（必ずこの流れのとおりに答える）',
-    `営業：「${dl(FIX_EX[n.id])}」`,
-    `あなた：「${n.ok}」`,
+    S.level==='easy' ? null : `（②${necks[1].g}がすでにすっきりしている場合）`,
+    `営業：「${dl(FIX_EX[necks[0].id])}」`,
+    `あなた：「${necks[0].ok}」`,
     inq ? '営業：「では一度見に来られませんか？」' : '営業：「当日は資金相談の時間もお取りしますね。」',
     inq ? 'あなた：「じゃあ一度見てみようかな。」' : 'あなた：「当日よろしくお願いします。」','',
-    `✕ 間違い：「${n.ok}」と言ったあとで、「${n.refuse}」と断る（すっきりした理由の蒸し返し）`);
+    ...necks.map(n => `✕ 間違い：「${n.ok}」と言ったあとで、「${n.refuse}」と断る（すっきりした理由の蒸し返し）`),
+    'すっきりしたときの一言を一度でも言った理由の「断るときの一言」は、それ以降二度と使いません。');
 
   if(val('extra')) add('---','','# その他の事情','',bullets(val('extra').split('\n').filter(Boolean)));
 
@@ -902,8 +918,8 @@ function buildPrompt(){
   /* 毎回の確認 */
   add('---','','# 毎回、返答する前に確認（表示しない）','',
     '1. 質問に対する結論だけを一文で返しているか',
-    `2. ${inq?'来場の誘い':'段取りの提案'}への返事なら、もう「${n.ok}」と言ったか（言っていれば必ず応じる）`,
-    `3. 「${n.g}」以外のことや、すっきりした後の「${n.g}」を、ためらう理由にしていないか`);
+    `2. ${inq?'来場の誘い':'段取りの提案'}への返事なら、ここまでに${necks.map((n,i)=>`${MK[i]}「${n.ok}」`).join('、')}を言ったか（言った理由はすっきり済み。${acceptWhen}なら必ず応じる）`,
+    '3. すっきりした理由や、①②以外のことを、ためらう理由にしていないか');
 
   return L.join('\n\n');
 }
