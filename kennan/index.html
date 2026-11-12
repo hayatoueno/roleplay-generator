@@ -268,7 +268,7 @@ const BASE = {speaker:'h',persona:'careful',
   kids:[],parents:[],others:'',site:[],exh:[],trg:[],land:'',landCity:'',time:[],
   city:'',town:'',school:'',areaOther:'',reason:[],down:'',monthly:'',bonus:'',
   hInc:'',hIncV:'',wInc:'',wIncV:'',worry:[],carM:'',carB:'',carR:'',othName:'',othM:'',othB:'',othR:'',
-  hHome:'',wHome:'',extra:'',readings:'小山=おやま\n大谷東=おおやひがし'};
+  hHome:'',wHome:'',extra:'',readings:'小山=おやま\n大谷東=おおやひがし\nハザード外=ハザードがい'};
 /* ================= 状態 ================= */
 const clone = o => JSON.parse(JSON.stringify(o));
 let S = clone(BASE);
@@ -563,7 +563,9 @@ function buildPrompt(){
   if(has(S.reason,'B')) honne.push('通勤時間を短くして、家族と過ごす時間を増やしたい');
   if(has(S.reason,'C')) honne.push('何かあったときに親を頼れる、または親を支えられる距離にいたい');
   if(has(S.reason,'D')) honne.push('場所よりも、とにかく毎月の支払いを抑えたい');
-  if(S.areaOther) honne.push(`「${S.areaOther}」を希望しているのは、毎日の生活が便利になるから`);
+  const hazard = /ハザード/.test(S.areaOther||'');
+  if(hazard) honne.push('ニュースで水害の映像を見て以来、浸水や土砂災害の心配がある場所には住みたくない');
+  else if(S.areaOther) honne.push(`「${S.areaOther}」という条件は、家族が安心して暮らすために外せない`);
   add('---','','# 購入背景・ニーズ','','## 購入を考えた背景','',
     bl(bg.length ? bg : ['住まいについて、なんとなく考え始めた']),'',
     '## 情報開示の深さ','',
@@ -583,13 +585,14 @@ function buildPrompt(){
     '設備の商品名や住宅性能の具体的数値など、専門的な知識もありません。');
 
   /* ---------- 希望条件 ---------- */
-  const areaTxt = [S.city + (S.town?S.town:''), S.school?`${S.school}の学区内`:'', S.areaOther].filter(Boolean).join('、');
+  const areaTxt = [S.city + (S.town?S.town:''), S.school?`${S.school}の学区内`:'', hazard ? `${S.areaOther}（ハザードマップで浸水などの危険がある区域の外）` : S.areaOther].filter(Boolean).join('、');
   const reasonTxt = (S.reason||[]).map(id => ({A:'子どもの学区内だから',B:'会社に近いから',C:'実家に近いから',D:'物件が安ければ場所にはこだわらない'})[id]);
   const must = [];
   if(has(S.worry,'A')||has(S.worry,'B')||has(S.worry,'G')||has(S.reason,'D')||has(S.time,'C')) must.push('無理なく返済できること');
   if(has(S.reason,'A')) must.push(S.school ? `${S.school}の学区内であること` : '子どもの学区を変えないこと');
   if(has(S.reason,'C')) must.push('実家の近くであること');
   if(has(S.reason,'B')) must.push('勤務先に通いやすいこと');
+  if(hazard) must.push('ハザードマップで浸水や土砂災害の危険がある区域に入っていないこと');
   if(S.carM || S.carR) must.push('車を置ける駐車スペースがあること');
   add('---','','# 希望条件・優先順位','',bl([
     areaTxt ? `希望の地域：${areaTxt}` : '希望の地域：まだはっきり決めていない',
