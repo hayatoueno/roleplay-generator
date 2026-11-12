@@ -85,7 +85,6 @@
   .link{background:none;border:none;color:var(--ink-60);font:inherit;font-size:12px;text-decoration:underline;cursor:pointer;padding:2px}
   .link:hover{color:var(--seal)}
 
-  .presets{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 
   /* サイド */
   .side{position:sticky;top:20px}
@@ -119,8 +118,6 @@
       <!-- 0. 設定 -->
       <section class="card">
         <div class="card-head"><h2><span class="no">00</span>ロープレの設定</h2></div>
-        <div class="q"><div class="ql">見本アンケート<small>読み込むと全項目が入ります</small></div>
-          <div class="qa"><div class="presets" id="presets"></div></div></div>
         <div class="q"><div class="ql">AIが演じる人</div><div class="qa"><div class="chips" id="speaker"></div></div></div>
         <div class="q"><div class="ql">お客様の性格</div><div class="qa"><div class="chips" id="persona"></div><p class="hint" id="personaDesc" style="margin-top:6px"></p></div></div>
       </section>
@@ -265,7 +262,6 @@ const Q_WORRY = {key:'worry',multi:true,t:'マイホーム購入に際してご�
 const H_INC = [{id:'A',t:'300万円未満',m:280},{id:'B',t:'300万円台',m:350},{id:'C',t:'400万円台',m:450},{id:'D',t:'500万円台',m:550},{id:'E',t:'600万円以上',m:650}];
 const W_INC = [{id:'A',t:'100万円未満',m:80},{id:'B',t:'100万円台',m:150},{id:'C',t:'200万円台',m:250},{id:'D',t:'300万円台',m:350},{id:'E',t:'400万円以上',m:450}];
 
-/* 見本：いただいたアンケート5種 */
 const BASE = {speaker:'h',persona:'careful',
   h:{name:'小山 太郎',kana:'おやま たろう',age:'',job:'',emp:'',ins:'',years:'',days:[]},
   w:{name:'小山 花子',kana:'おやま はなこ',age:'',job:'',emp:'',ins:'',years:'',days:[]},
@@ -273,30 +269,6 @@ const BASE = {speaker:'h',persona:'careful',
   city:'',town:'',school:'',areaOther:'',reason:[],down:'',monthly:'',bonus:'',
   hInc:'',hIncV:'',wInc:'',wIncV:'',worry:[],carM:'',carB:'',carR:'',othName:'',othM:'',othB:'',othR:'',
   hHome:'',wHome:'',extra:'',readings:'小山=おやま\n大谷東=おおやひがし'};
-const PRESETS = [
-  {t:'No.1 子育て・学区重視',d:{
-    h:{age:'35',job:'会社員',emp:'正社員',ins:'社保'},w:{age:'33',job:'パート'},
-    kids:[{s:'男',a:'6'},{s:'女',a:'3'}],site:['A'],exh:['A','C'],trg:['A'],land:'A',time:['B'],
-    city:'小山市',school:'大谷東小学校',reason:['A'],down:'50',monthly:'9',bonus:'0',hInc:'D',wInc:'A',
-    worry:['A','B'],carM:'2',carB:'0',carR:'150',hHome:'小山市',wHome:'小山市'}},
-  {t:'No.2 共働き・転勤が心配',d:{
-    h:{age:'32',job:'会社員',emp:'正社員',ins:'社保'},w:{age:'31',job:'会社員',emp:'正社員',ins:'社保'},
-    site:['A'],exh:['B'],trg:['B'],land:'A',time:['A'],city:'小山市',areaOther:'駅近',
-    down:'100',monthly:'10',bonus:'15',hInc:'E',wInc:'D',worry:['E'],hHome:'東京都',wHome:'小山市'}},
-  {t:'No.3 自営業・借入が心配',d:{
-    h:{age:'42',job:'自営業',emp:'自営',ins:'国保',years:'3'},w:{age:'38',job:'専業主婦'},
-    kids:[{s:'男',a:'10'}],site:['A'],exh:['C'],trg:['G'],land:'A',time:['C'],city:'小山市',reason:['D'],
-    down:'0',monthly:'10',bonus:'0',hInc:'D',worry:['A'],carM:'3',carB:'0',carR:'70'}},
-  {t:'No.4 頭金なし・返済が心配',d:{
-    h:{age:'29',job:'会社員',emp:'正社員',ins:'社保',years:'5'},w:{age:'36',job:'',emp:'契約社員'},
-    kids:[{s:'女',a:'5'},{s:'女',a:'2'}],site:['A'],exh:['A','B','C'],trg:['B','D','G'],land:'A',time:['A','B'],
-    down:'0',monthly:'9',hInc:'C',wInc:'C',worry:['B','G'],carM:'4',carR:'200'}},
-  {t:'No.5 実家の近く・親が反対',d:{
-    h:{age:'29',job:'会社員',emp:'正社員',years:'7'},w:{age:'29',job:'会社員',emp:'正社員',years:'7'},
-    site:['A'],exh:['A'],trg:['B'],land:'A',time:['A'],city:'小山市',areaOther:'ハーヴェストウォーク周辺',reason:['C'],
-    hInc:'C',wInc:'D',worry:['D'],hHome:'小山市',wHome:'小山市'}}
-];
-
 /* ================= 状態 ================= */
 const clone = o => JSON.parse(JSON.stringify(o));
 let S = clone(BASE);
@@ -326,8 +298,6 @@ function reg(el){ syncers.push(el); }
 
 reg(chips('speaker', SPEAKERS, ()=>S.speaker, v=>{S.speaker=v||'h';}, false, false, true));
 reg(chips('persona', PERSONAS, ()=>S.persona, v=>{S.persona=v||'careful';}, false, false, true));
-$('presets').innerHTML = PRESETS.map((p,i)=>`<button class="btn ghost sm" type="button" data-i="${i}">${esc(p.t)}</button>`).join('');
-$('presets').querySelectorAll('button').forEach(b => b.onclick = () => loadPreset(+b.dataset.i));
 
 /* 主人・奥様の欄 */
 function personBox(key, title){
@@ -395,16 +365,6 @@ function syncAll(){
   TEXT_IDS.forEach(id => $(id).value = S[id] || '');
   syncers.forEach(el => el._sync && el._sync());
   paintKids();
-}
-function loadPreset(i){
-  const d = clone(PRESETS[i].d);
-  const keep = {speaker:S.speaker, persona:S.persona, readings:S.readings};
-  S = Object.assign(clone(BASE), d, keep);
-  S.h = Object.assign(clone(BASE.h), d.h || {});
-  S.w = Object.assign(clone(BASE.w), d.w || {});
-  autoDirty = {deadline:false,needs:false};
-  syncAll(); changed();
-  toast(`${PRESETS[i].t} を読み込みました`);
 }
 $('clearBtn').onclick = () => {
   const keep = {speaker:S.speaker, persona:S.persona};
@@ -742,9 +702,9 @@ $('dlBtn').onclick = () => {
   a.click(); URL.revokeObjectURL(a.href); toast('保存しました');
 };
 
-/* 初期表示：見本No.1 */
+/* 初期表示：空欄 */
 syncAll();
-loadPreset(0);
+changed();
 </script>
 </body>
 </html>
