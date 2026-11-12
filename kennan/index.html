@@ -401,11 +401,12 @@ function autoDeadline(){
     else if(pre) t = `${pre.label}（${pre.a}歳）の幼稚園・保育園の入園までに`;
     else if(mid) t = `${mid.label}（${mid.a}歳）の中学校入学までに`;
     else t = '子どもの入園・入学までに';
-    parts.push(t);
+    /* 「すぐ」と「入学まで」の両方なら「遅くとも〜までには」 */
+    if(parts.length){ parts[0] += '、遅くとも' + t + 'は'; } else parts.push(t);
   }
   if(has(S.time,'C')) parts.push('頭金ができたら');
   if(has(S.time,'D')) parts.push('車などのローンが終わったら');
-  return parts.length ? parts.join('／') + '購入したい' : '';
+  return parts.length ? parts.join('、または') + '購入したい' : '';
 }
 function autoNeeds(){
   const pre = [];
