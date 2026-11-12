@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>グランディハウス 県南支社 アンケート型ロープレジェネレーター</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F6F7F4; --grid:#DCE3E2; --ink:#16242E; --ink-60:#5B6B74; --ink-30:#9AA6AC;
+    --line:#C7D0D2; --seal:#B23A2E; --seal-soft:#F0DDD9; --white:#FFFFFF; --soft:#FBFCFB; --radius:2px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:"Zen Kaku Gothic New",system-ui,sans-serif;color:var(--ink);
+    background-color:var(--paper);
+    background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+    background-size:24px 24px;background-position:-1px -1px;
+    line-height:1.7;font-size:15px;-webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:0 16px 96px}
+  header{padding:44px 0 24px;border-bottom:1px solid var(--ink);margin-bottom:28px}
+  .eyebrow{font-family:"Roboto Mono",monospace;font-size:11px;letter-spacing:.18em;color:var(--ink-60);text-transform:uppercase;margin-bottom:12px}
+  h1{font-family:"Zen Old Mincho",serif;font-weight:700;font-size:clamp(26px,4.2vw,40px);line-height:1.25}
+  h1 .thin{color:var(--ink-30)}
+  .lede{margin-top:12px;color:var(--ink-60)}
+
+  .cols{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:32px;align-items:start}
+  @media(max-width:960px){.cols{grid-template-columns:minmax(0,1fr)}}
+
+  .card{background:var(--white);border:1px solid var(--ink);box-shadow:6px 6px 0 rgba(22,36,46,.07);margin-bottom:24px}
+  .card-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 20px;border-bottom:1px solid var(--ink)}
+  .card-head h2{font-family:"Zen Old Mincho",serif;font-size:18px;font-weight:700}
+  .card-head .no{font-family:"Roboto Mono",monospace;font-size:11px;color:var(--seal);letter-spacing:.12em;margin-right:10px}
+  .card-body{padding:18px 20px}
+  .hint{color:var(--ink-60);font-size:13px}
+
+  /* アンケート表 */
+  .q{display:grid;grid-template-columns:200px minmax(0,1fr);border-bottom:1px solid var(--line)}
+  .q:last-child{border-bottom:none}
+  .q > .ql{background:var(--soft);border-right:1px solid var(--line);padding:12px 14px;font-size:13px;font-weight:700;line-height:1.5}
+  .q > .ql small{display:block;font-weight:400;color:var(--ink-30);font-size:11px;margin-top:2px}
+  .q > .qa{padding:10px 14px;min-width:0}
+  @media(max-width:640px){.q{grid-template-columns:1fr}.q > .ql{border-right:none;border-bottom:1px dashed var(--line)}}
+
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{position:relative;cursor:pointer;user-select:none}
+  .chip input{position:absolute;opacity:0;width:0;height:0}
+  .chip span{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px;line-height:1.4;background:var(--white);transition:.12s}
+  .chip span b{font-family:"Roboto Mono",monospace;font-weight:500;color:var(--ink-60);margin-right:5px}
+  .chip:hover span{border-color:var(--ink-60)}
+  .chip input:checked + span{border-color:var(--seal);background:var(--seal-soft);color:var(--seal);font-weight:700}
+  .chip input:checked + span b{color:var(--seal)}
+  .chip input:focus-visible + span{outline:2px solid var(--seal);outline-offset:2px}
+
+  input[type=text],input[type=number],textarea{font:inherit;font-size:14px;color:var(--ink);background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:6px 9px;min-width:0}
+  input:focus,textarea:focus{outline:2px solid var(--seal);outline-offset:1px;border-color:var(--seal)}
+  input.n{width:72px;text-align:right}
+  input.w{width:100%}
+  textarea{width:100%;min-height:64px;resize:vertical}
+  .inl{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:13px}
+  .inl + .inl{margin-top:8px}
+  .sub{font-size:12px;color:var(--ink-60);min-width:3em}
+
+  /* 主人・奥様 */
+  .persons{display:grid;grid-template-columns:1fr 1fr}
+  .person{padding:16px 20px;min-width:0}
+  .person + .person{border-left:1px solid var(--line)}
+  @media(max-width:760px){.persons{grid-template-columns:1fr}.person + .person{border-left:none;border-top:1px solid var(--line)}}
+  .person h3{font-family:"Zen Old Mincho",serif;font-size:16px;margin-bottom:10px}
+  .pf{display:grid;grid-template-columns:72px minmax(0,1fr);gap:8px 10px;align-items:center;font-size:13px}
+  .pf > label{color:var(--ink-60);font-size:12px}
+
+  .kid{display:flex;gap:8px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
+  .btn{font:inherit;cursor:pointer;border-radius:var(--radius);border:1px solid var(--ink);background:var(--ink);color:#fff;padding:9px 18px;font-size:14px;font-weight:700;letter-spacing:.04em}
+  .btn:hover{background:#0C1920}
+  .btn.primary{background:var(--seal);border-color:var(--seal)}
+  .btn.primary:hover{background:#9B3025}
+  .btn.ghost{background:var(--white);color:var(--ink);border-color:var(--line)}
+  .btn.ghost:hover{border-color:var(--ink)}
+  .btn.sm{padding:4px 10px;font-size:12px;font-weight:500}
+  .btn:focus-visible{outline:2px solid var(--seal);outline-offset:2px}
+  .link{background:none;border:none;color:var(--ink-60);font:inherit;font-size:12px;text-decoration:underline;cursor:pointer;padding:2px}
+  .link:hover{color:var(--seal)}
+
+  .presets{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+  /* サイド */
+  .side{position:sticky;top:20px}
+  @media(max-width:960px){.side{position:static}}
+  .karte dl{display:grid;grid-template-columns:74px minmax(0,1fr)}
+  .karte dt{font-size:11px;color:var(--ink-60);padding:8px 10px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);background:var(--soft)}
+  .karte dd{font-size:12.5px;padding:8px 10px;border-bottom:1px solid var(--line);line-height:1.5;word-break:break-word}
+  .karte dd:empty::before{content:"—";color:var(--ink-30)}
+  .side .actions{padding:16px;display:grid;gap:8px}
+
+  .out{display:none}
+  .out.active{display:block}
+  pre{font-family:"Zen Kaku Gothic New",monospace;font-size:13px;line-height:1.85;white-space:pre-wrap;word-break:break-word;padding:20px;max-height:70vh;overflow:auto;background:var(--soft)}
+  .out-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:var(--ink);color:#fff;padding:10px 18px;font-size:13px;transition:.25s;z-index:10}
+  .toast.on{opacity:1;transform:translate(-50%,0)}
+  footer{margin-top:32px;font-size:12px;color:var(--ink-30);text-align:center}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Grandy House / Kennan Branch / Roleplay Prompt Builder</div>
+    <h1>グランディハウス 県南支社<br><span class="thin">アンケート型 接客ロープレ ジェネレーター</span></h1>
+    <p class="lede">来場時の「市場調査アンケート」と同じ項目を選ぶと、その内容どおりのお客様をAIが演じるプロンプトができます。<br>場面は「アンケート記入後、物件案内の前のヒアリング」です。できたプロンプトをリフレクトルに入れて使います。</p>
+  </header>
+
+  <div class="cols">
+    <main>
+      <!-- 0. 設定 -->
+      <section class="card">
+        <div class="card-head"><h2><span class="no">00</span>ロープレの設定</h2></div>
+        <div class="q"><div class="ql">見本アンケート<small>読み込むと全項目が入ります</small></div>
+          <div class="qa"><div class="presets" id="presets"></div></div></div>
+        <div class="q"><div class="ql">AIが演じる人</div><div class="qa"><div class="chips" id="speaker"></div></div></div>
+        <div class="q"><div class="ql">お客様の性格</div><div class="qa"><div class="chips" id="persona"></div><p class="hint" id="personaDesc" style="margin-top:6px"></p></div></div>
+      </section>
+
+      <!-- 1. お名前など -->
+      <section class="card">
+        <div class="card-head"><h2><span class="no">01</span>お名前・ご勤務先・ご家族構成</h2></div>
+        <div class="persons">
+          <div class="person" id="hBox"></div>
+          <div class="person" id="wBox"></div>
+        </div>
+        <div class="q" style="border-top:1px solid var(--line)"><div class="ql">ご家族構成<small>子どもは行を追加</small></div>
+          <div class="qa">
+            <div id="kids"></div>
+            <button class="btn ghost sm" type="button" id="addKid">＋ 子どもを追加</button>
+            <div class="inl" style="margin-top:10px"><span class="sub">同居</span><div class="chips" id="parents"></div>
+              <span class="sub">他</span><input type="number" class="n" id="others" min="0" value="">名</div>
+          </div></div>
+      </section>
+
+      <!-- 2. 設問 -->
+      <section class="card">
+        <div class="card-head"><h2><span class="no">02</span>アンケートの設問</h2><span class="hint">丸がついた選択肢を選んでください（複数可の設問あり）</span></div>
+        <div id="questions"></div>
+
+        <div class="q"><div class="ql">ご希望の地域は？</div><div class="qa">
+          <div class="inl"><input type="text" id="city" style="width:110px" placeholder="例：小山市">
+            <span class="sub">町</span><input type="text" id="town" style="width:110px">
+            <span class="sub">学校区</span><input type="text" id="school" style="width:150px" placeholder="例：大谷東小学校"></div>
+          <div class="inl"><span class="sub">その他</span><input type="text" id="areaOther" style="flex:1;min-width:160px" placeholder="例：駅近"></div>
+        </div></div>
+        <div id="questions2"></div>
+
+        <div class="q"><div class="ql">住宅ローンの理想の返済額は？</div><div class="qa"><div class="inl">
+          頭金<input type="number" class="n" id="down" min="0">万円
+          月々<input type="number" class="n" id="monthly" min="0" step="0.5">万円
+          ボーナス<input type="number" class="n" id="bonus" min="0">万円</div>
+          <p class="hint" style="margin-top:4px">空欄＝アンケートに記入なし（まだ考えていない）</p></div></div>
+
+        <div class="q"><div class="ql">ご年収（税込）は？</div><div class="qa">
+          <div class="inl"><span class="sub">ご主人</span><div class="chips" id="hInc"></div><span id="hIncE">（<input type="number" class="n" id="hIncV">万円）</span></div>
+          <div class="inl"><span class="sub">奥様</span><div class="chips" id="wInc"></div><span id="wIncE">（<input type="number" class="n" id="wIncV">万円）</span></div>
+        </div></div>
+
+        <div id="questions3"></div>
+
+        <div class="q"><div class="ql">その他のお借入れ状況は？</div><div class="qa">
+          <div class="inl"><span class="sub">① 車のローン</span>月<input type="number" class="n" id="carM" step="0.5">万円・ボーナス<input type="number" class="n" id="carB">万円・残高<input type="number" class="n" id="carR">万円</div>
+          <div class="inl"><span class="sub">② その他</span><input type="text" id="othName" style="width:120px" placeholder="例：奨学金">月<input type="number" class="n" id="othM" step="0.5">万円・ボーナス<input type="number" class="n" id="othB">万円・残高<input type="number" class="n" id="othR">万円</div>
+        </div></div>
+
+        <div class="q"><div class="ql">ご実家</div><div class="qa"><div class="inl">
+          <span class="sub">ご主人</span><input type="text" id="hHome" style="width:140px">
+          <span class="sub">奥様</span><input type="text" id="wHome" style="width:140px"></div></div></div>
+      </section>
+
+      <!-- 3. 自動作成（編集可） -->
+      <section class="card">
+        <div class="card-head"><h2><span class="no">03</span>アンケートから自動で作る項目</h2><button class="link" type="button" id="resetAuto">アンケートから作り直す</button></div>
+        <div class="card-body" style="display:grid;gap:14px">
+          <p class="hint">アンケートの回答から自動で入ります。書き換えた場合は、その内容がプロンプトに入ります。</p>
+          <div><div class="sub" style="margin-bottom:4px;font-weight:700;color:var(--ink)">取得時期の目安</div><input type="text" class="w" id="deadline"></div>
+          <div><div class="sub" style="margin-bottom:4px;font-weight:700;color:var(--ink)">最重要ニーズ（本当に実現したいこと）</div><textarea id="needs"></textarea></div>
+          <div><div class="sub" style="margin-bottom:4px;font-weight:700;color:var(--ink)">その他の事情 <span style="font-weight:400;color:var(--ink-30)">任意・1行に1つ</span></div><textarea id="extra" placeholder="例：現在は小山駅近くの2LDKの賃貸アパートに住んでいる"></textarea></div>
+          <div><div class="sub" style="margin-bottom:4px;font-weight:700;color:var(--ink)">読み方の指定 <span style="font-weight:400;color:var(--ink-30)">「漢字=よみ」を1行に1つ。AIはひらがなで話します</span></div><textarea id="readings"></textarea></div>
+        </div>
+      </section>
+
+      <section class="card out" id="out">
+        <div class="card-head"><h2><span class="no">OUT</span>できあがったプロンプト</h2>
+          <div class="out-actions"><button class="btn primary" type="button" id="copyBtn">コピー</button><button class="btn ghost" type="button" id="dlBtn">テキストで保存</button></div></div>
+        <pre id="promptText"></pre>
+      </section>
+    </main>
+
+    <aside class="side">
+      <section class="card karte">
+        <div class="card-head"><h2>お客様カルテ</h2></div>
+        <dl>
+          <dt>演じる人</dt><dd id="k-me"></dd>
+          <dt>家族</dt><dd id="k-fam"></dd>
+          <dt>年収</dt><dd id="k-inc"></dd>
+          <dt>きっかけ</dt><dd id="k-trg"></dd>
+          <dt>時期</dt><dd id="k-time"></dd>
+          <dt>地域</dt><dd id="k-area"></dd>
+          <dt>資金</dt><dd id="k-money"></dd>
+          <dt>心配事</dt><dd id="k-worry"></dd>
+        </dl>
+        <div class="actions">
+          <button class="btn primary" type="button" id="genBtn">プロンプトを生成する</button>
+          <button class="btn ghost" type="button" id="clearBtn">すべて空にする</button>
+        </div>
+      </section>
+    </aside>
+  </div>
+  <footer>Co-Growth / Reflectle — グランディハウス様 県南支社向け</footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= データ定義 ================= */
+const SPEAKERS = [{id:'h',t:'ご主人'},{id:'w',t:'奥様'}];
+const PERSONAS = [
+  {id:'careful',t:'真面目で慎重',d:'聞かれれば答えるが自分からは話さない。標準的な練習向き。',
+   text:'あなたは真面目で慎重で、家族を優先して考えるお客様です。\n\n聞かれれば答えますが、自分から詳しく話したり、会話を主導したりしません。\n\n判断材料が足りなければ決めませんが、比較して納得できれば購入を決断できます。'},
+  {id:'guard',t:'営業が苦手',d:'序盤は素っ気ない。信頼関係づくりの練習。',
+   text:'あなたは営業されることに警戒心があるお客様です。\n\n序盤は素っ気なく短い返事しかせず、信頼できる担当者だと感じて初めて事情や本音を話します。\n\n売り込まれていると感じると、「今日は見るだけなので」と距離を取ります。'},
+  {id:'logical',t:'理詰め・質問が鋭い',d:'根拠のない話は突っ込まれる。',
+   text:'あなたは理屈で納得したいお客様です。\n\n聞かれれば答えますが、根拠や数字のない説明には「それはなぜですか」と聞き返します。\n\n曖昧な説明が続くと、心を開きにくくなります。'},
+  {id:'emotive',t:'感情・雰囲気重視',d:'共感されると話しやすくなる。',
+   text:'あなたは暮らしのイメージや雰囲気で判断するお客様です。\n\n気持ちに共感してもらえると心を開き、本音を話しやすくなります（ただし返答は1文・1情報のまま）。\n\n事務的に進められると気持ちが冷めます。'}
+];
+const EMP = [{id:'正社員',t:'正社員'},{id:'契約社員',t:'契約社員'},{id:'派遣社員',t:'派遣社員'},{id:'自営',t:'自営'}];
+const INS = [{id:'社保',t:'社保'},{id:'国保',t:'国保'}];
+const DAYS = ['月','火','水','木','金','土','日'].map(d=>({id:d,t:d}));
+const PARENTS = [{id:'父',t:'父'},{id:'母',t:'母'}];
+
+const Q_SITE = {key:'site',multi:true,t:'住宅情報サイトは主に何をご利用されますか？',o:[
+  {id:'A',t:'スーモ',v:'SUUMO'},{id:'B',t:'ホームズ',v:"LIFULL HOME'S"},{id:'C',t:'アットホーム',v:'アットホーム'},{id:'D',t:'ヤフー不動産',v:'Yahoo!不動産'},{id:'E',t:'ニフティ',v:'ニフティ不動産'}]};
+const Q_EXH = {key:'exh',multi:true,t:'住宅展示場や見学会等に行かれた事はありますか？',o:[
+  {id:'A',t:'住宅展示場を見た',v:'住宅展示場で注文住宅を見たことがある'},
+  {id:'B',t:'新築分譲住宅を見た',v:'ほかの会社の新築分譲住宅を見学したことがある'},
+  {id:'C',t:'チラシは見てる',v:'分譲住宅のチラシはよく見ている'},
+  {id:'D',t:'見たことが無い',v:'住宅展示場や見学会に行ったことはなく、見学は今回が初めて'}]};
+const Q_TRG = {key:'trg',multi:true,t:'マイホーム購入を考えるようになった「きっかけ」は？',o:[
+  {id:'A',t:'今の家が手狭だから',bg:'今の住まいが手狭になってきた',honne:'物が増えて片付かず、家族それぞれがくつろげる場所がない',need:'家族がゆとりを持って暮らせる'},
+  {id:'B',t:'家賃がもったいない',bg:'家賃を払い続けるのがもったいないと感じている',honne:'同じお金を払うなら、家賃ではなく自分たちの資産になる家に払いたい',need:'家賃ではなく自分たちの資産になる'},
+  {id:'C',t:'結婚',bg:'結婚を機に住まいを考えるようになった',honne:'夫婦で長く暮らす家を、最初からきちんと持ちたい',need:'夫婦で長く暮らせる'},
+  {id:'D',t:'子供ができたから',bg:'子どもができて住まいを考えるようになった',honne:'子どもが小さいうちに、周りに気をつかわずのびのび過ごせる環境をつくってあげたい',need:'子どもがのびのびと育つ'},
+  {id:'E',t:'友人等に刺激されて',bg:'友人や同僚が家を買ったことに刺激を受けた',honne:'周りが次々に家を買っていて、自分たちも取り残されたくないと感じている',need:'自分たちらしく暮らせる'},
+  {id:'F',t:'両親との同居',bg:'両親との同居を考えている',honne:'親も年を取ってきたので、一緒に住んで支えられる家にしたい',need:'親と支え合いながら暮らせる'},
+  {id:'G',t:'年齢的にもそろそろほしいから',bg:'年齢的にもそろそろ家がほしいと思っている',honne:'ローンを組むなら、完済するときの年齢を考えて早めに動きたい',need:'早めに安心して暮らせる'}]};
+const Q_LAND = {key:'land',multi:false,t:'マイホーム建築の為の土地はご用意されていますか？',o:[
+  {id:'A',t:'用意していない'},{id:'B',t:'用意してある'}]};
+const Q_TIME = {key:'time',multi:true,t:'マイホーム取得の時期は？',o:[
+  {id:'A',t:'条件が合えばすぐ'},{id:'B',t:'子供が入園・入学まで'},{id:'C',t:'頭金ができたら'},{id:'D',t:'車等のローンが終わったら'}]};
+const Q_REASON = {key:'reason',multi:true,t:'ご希望の地域の理由は？',o:[
+  {id:'A',t:'子供の学区内'},{id:'B',t:'会社の近く'},{id:'C',t:'実家の近く'},{id:'D',t:'物件が安ければこだわらない'}]};
+const Q_WORRY = {key:'worry',multi:true,t:'マイホーム購入に際してご心配な事は？',o:[
+  {id:'A',t:'借入ができるか心配'},{id:'B',t:'住宅ローンの返済'},{id:'C',t:'雇用の不安'},{id:'D',t:'実家の反対'},
+  {id:'E',t:'転勤が心配'},{id:'F',t:'子供の転校'},{id:'G',t:'頭金が無い'}]};
+const H_INC = [{id:'A',t:'300万円未満',m:280},{id:'B',t:'300万円台',m:350},{id:'C',t:'400万円台',m:450},{id:'D',t:'500万円台',m:550},{id:'E',t:'600万円以上',m:650}];
+const W_INC = [{id:'A',t:'100万円未満',m:80},{id:'B',t:'100万円台',m:150},{id:'C',t:'200万円台',m:250},{id:'D',t:'300万円台',m:350},{id:'E',t:'400万円以上',m:450}];
+
+/* 見本：いただいたアンケート5種 */
+const BASE = {speaker:'h',persona:'careful',
+  h:{name:'小山 太郎',kana:'おやま たろう',age:'',job:'',emp:'',ins:'',years:'',days:[]},
+  w:{name:'小山 花子',kana:'おやま はなこ',age:'',job:'',emp:'',ins:'',years:'',days:[]},
+  kids:[],parents:[],others:'',site:[],exh:[],trg:[],land:'',landCity:'',time:[],
+  city:'',town:'',school:'',areaOther:'',reason:[],down:'',monthly:'',bonus:'',
+  hInc:'',hIncV:'',wInc:'',wIncV:'',worry:[],carM:'',carB:'',carR:'',othName:'',othM:'',othB:'',othR:'',
+  hHome:'',wHome:'',extra:'',readings:'小山=おやま\n大谷東=おおやひがし'};
+const PRESETS = [
+  {t:'No.1 子育て・学区重視',d:{
+    h:{age:'35',job:'会社員',emp:'正社員',ins:'社保'},w:{age:'33',job:'パート'},
+    kids:[{s:'男',a:'6'},{s:'女',a:'3'}],site:['A'],exh:['A','C'],trg:['A'],land:'A',time:['B'],
+    city:'小山市',school:'大谷東小学校',reason:['A'],down:'50',monthly:'9',bonus:'0',hInc:'D',wInc:'A',
+    worry:['A','B'],carM:'2',carB:'0',carR:'150',hHome:'小山市',wHome:'小山市'}},
+  {t:'No.2 共働き・転勤が心配',d:{
+    h:{age:'32',job:'会社員',emp:'正社員',ins:'社保'},w:{age:'31',job:'会社員',emp:'正社員',ins:'社保'},
+    site:['A'],exh:['B'],trg:['B'],land:'A',time:['A'],city:'小山市',areaOther:'駅近',
+    down:'100',monthly:'10',bonus:'15',hInc:'E',wInc:'D',worry:['E'],hHome:'東京都',wHome:'小山市'}},
+  {t:'No.3 自営業・借入が心配',d:{
+    h:{age:'42',job:'自営業',emp:'自営',ins:'国保',years:'3'},w:{age:'38',job:'専業主婦'},
+    kids:[{s:'男',a:'10'}],site:['A'],exh:['C'],trg:['G'],land:'A',time:['C'],city:'小山市',reason:['D'],
+    down:'0',monthly:'10',bonus:'0',hInc:'D',worry:['A'],carM:'3',carB:'0',carR:'70'}},
+  {t:'No.4 頭金なし・返済が心配',d:{
+    h:{age:'29',job:'会社員',emp:'正社員',ins:'社保',years:'5'},w:{age:'36',job:'',emp:'契約社員'},
+    kids:[{s:'女',a:'5'},{s:'女',a:'2'}],site:['A'],exh:['A','B','C'],trg:['B','D','G'],land:'A',time:['A','B'],
+    down:'0',monthly:'9',hInc:'C',wInc:'C',worry:['B','G'],carM:'4',carR:'200'}},
+  {t:'No.5 実家の近く・親が反対',d:{
+    h:{age:'29',job:'会社員',emp:'正社員',years:'7'},w:{age:'29',job:'会社員',emp:'正社員',years:'7'},
+    site:['A'],exh:['A'],trg:['B'],land:'A',time:['A'],city:'小山市',areaOther:'ハーヴェストウォーク周辺',reason:['C'],
+    hInc:'C',wInc:'D',worry:['D'],hHome:'小山市',wHome:'小山市'}}
+];
+
+/* ================= 状態 ================= */
+const clone = o => JSON.parse(JSON.stringify(o));
+let S = clone(BASE);
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ================= 描画 ================= */
+function chips(host, list, get, set, multi, labelId, required){
+  const el = typeof host==='string' ? $(host) : host;
+  const name = 'c' + Math.random().toString(36).slice(2,8);
+  el.innerHTML = list.map(o => `<label class="chip"><input type="${multi?'checkbox':'radio'}" name="${name}" value="${esc(o.id)}"><span>${labelId?`<b>${o.id}</b>`:''}${esc(o.t)}</span></label>`).join('');
+  const inputs = [...el.querySelectorAll('input')];
+  inputs.forEach(i => i.addEventListener('click', () => {
+    if(multi){ set(inputs.filter(x=>x.checked).map(x=>x.value)); }
+    else { /* ラジオは同じものをもう一度押すと解除 */
+      const cur = get();
+      if(cur===i.value){ if(!required){ i.checked=false; set(''); } } else set(i.value);
+    }
+    changed();
+  }));
+  el._sync = () => { const v = get(); inputs.forEach(i => i.checked = multi ? (v||[]).includes(i.value) : v===i.value); };
+  el._sync();
+  return el;
+}
+const syncers = [];
+function reg(el){ syncers.push(el); }
+
+reg(chips('speaker', SPEAKERS, ()=>S.speaker, v=>{S.speaker=v||'h';}, false, false, true));
+reg(chips('persona', PERSONAS, ()=>S.persona, v=>{S.persona=v||'careful';}, false, false, true));
+$('presets').innerHTML = PRESETS.map((p,i)=>`<button class="btn ghost sm" type="button" data-i="${i}">${esc(p.t)}</button>`).join('');
+$('presets').querySelectorAll('button').forEach(b => b.onclick = () => loadPreset(+b.dataset.i));
+
+/* 主人・奥様の欄 */
+function personBox(key, title){
+  const box = $(key+'Box');
+  box.innerHTML = `<h3>${title}</h3><div class="pf">
+    <label>お名前</label><input type="text" class="w" data-f="name">
+    <label>フリガナ</label><input type="text" class="w" data-f="kana" placeholder="ひらがな">
+    <label>年齢</label><div class="inl"><input type="number" class="n" data-f="age" min="18" max="90">才</div>
+    <label>ご勤務先</label><input type="text" class="w" data-f="job" placeholder="例：会社員／パート／自営業">
+    <label>雇用形態</label><div class="chips" data-c="emp"></div>
+    <label>保険証</label><div class="chips" data-c="ins"></div>
+    <label>勤続年数</label><div class="inl"><input type="number" class="n" data-f="years" min="0">年</div>
+    <label>休日</label><div class="chips" data-c="days"></div>
+  </div>`;
+  box.querySelectorAll('[data-f]').forEach(i => i.addEventListener('input', () => { S[key][i.dataset.f] = i.value.trim(); changed(); }));
+  reg(chips(box.querySelector('[data-c=emp]'), EMP, ()=>S[key].emp, v=>S[key].emp=v, false));
+  reg(chips(box.querySelector('[data-c=ins]'), INS, ()=>S[key].ins, v=>S[key].ins=v, false));
+  reg(chips(box.querySelector('[data-c=days]'), DAYS, ()=>S[key].days, v=>S[key].days=v, true));
+}
+personBox('h','ご主人'); personBox('w','奥様');
+reg(chips('parents', PARENTS, ()=>S.parents, v=>S.parents=v, true));
+
+/* 子ども */
+function paintKids(){
+  $('kids').innerHTML = S.kids.map((k,i)=>`<div class="kid"><span class="sub">子ども${i+1}</span>
+    <div class="chips" data-k="${i}"></div><input type="number" class="n" data-a="${i}" min="0" max="40" value="${esc(k.a)}">才
+    <button class="link" type="button" data-del="${i}">削除</button></div>`).join('') || '<p class="hint" style="margin-bottom:6px">子どもなし</p>';
+  $('kids').querySelectorAll('[data-k]').forEach(el => { const i=+el.dataset.k;
+    chips(el, [{id:'男',t:'男'},{id:'女',t:'女'}], ()=>S.kids[i].s, v=>S.kids[i].s=v||'男', false, false, true); });
+  $('kids').querySelectorAll('[data-a]').forEach(el => el.addEventListener('input', () => { S.kids[+el.dataset.a].a = el.value.trim(); changed(); }));
+  $('kids').querySelectorAll('[data-del]').forEach(el => el.onclick = () => { S.kids.splice(+el.dataset.del,1); paintKids(); changed(); });
+}
+$('addKid').onclick = () => { S.kids.push({s:'男',a:''}); paintKids(); changed(); };
+
+/* 設問 */
+function question(host, q, extraHtml=''){
+  const wrap = document.createElement('div');
+  wrap.className = 'q';
+  wrap.innerHTML = `<div class="ql">${q.t}${q.multi?'<small>複数選択可</small>':''}</div><div class="qa"><div class="chips"></div>${extraHtml}</div>`;
+  $(host).appendChild(wrap);
+  reg(chips(wrap.querySelector('.chips'), q.o, ()=>S[q.key], v=>S[q.key]=v, q.multi, true));
+  return wrap;
+}
+question('questions', Q_SITE);
+question('questions', Q_EXH);
+question('questions', Q_TRG);
+question('questions', Q_LAND, '<div class="inl" style="margin-top:8px" id="landCityRow">用意してある場所：<input type="text" id="landCity" style="width:120px">市</div>');
+question('questions', Q_TIME);
+question('questions2', Q_REASON);
+reg(chips('hInc', H_INC, ()=>S.hInc, v=>S.hInc=v, false, true));
+reg(chips('wInc', W_INC, ()=>S.wInc, v=>S.wInc=v, false, true));
+question('questions3', Q_WORRY);
+
+/* テキスト欄 */
+const TEXT_IDS = ['others','landCity','city','town','school','areaOther','down','monthly','bonus','hIncV','wIncV',
+  'carM','carB','carR','othName','othM','othB','othR','hHome','wHome','extra','readings'];
+TEXT_IDS.forEach(id => $(id).addEventListener('input', () => { S[id] = $(id).value.trim(); changed(); }));
+/* 自動作成欄：手で書き換えたら自動更新を止める */
+let autoDirty = {deadline:false, needs:false};
+['deadline','needs'].forEach(id => $(id).addEventListener('input', () => { autoDirty[id] = true; paintKarte(); }));
+$('resetAuto').onclick = () => { autoDirty = {deadline:false,needs:false}; refreshAuto(); toast('アンケートから作り直しました'); };
+
+function syncAll(){
+  ['h','w'].forEach(k => $(k+'Box').querySelectorAll('[data-f]').forEach(i => i.value = S[k][i.dataset.f] || ''));
+  TEXT_IDS.forEach(id => $(id).value = S[id] || '');
+  syncers.forEach(el => el._sync && el._sync());
+  paintKids();
+}
+function loadPreset(i){
+  const d = clone(PRESETS[i].d);
+  const keep = {speaker:S.speaker, persona:S.persona, readings:S.readings};
+  S = Object.assign(clone(BASE), d, keep);
+  S.h = Object.assign(clone(BASE.h), d.h || {});
+  S.w = Object.assign(clone(BASE.w), d.w || {});
+  autoDirty = {deadline:false,needs:false};
+  syncAll(); changed();
+  toast(`${PRESETS[i].t} を読み込みました`);
+}
+$('clearBtn').onclick = () => {
+  const keep = {speaker:S.speaker, persona:S.persona};
+  S = Object.assign(clone(BASE), keep);
+  autoDirty = {deadline:false,needs:false};
+  syncAll(); changed(); toast('空にしました');
+};
+
+/* ================= 文章のもと ================= */
+const num = v => v===''||v==null ? null : Number(v);
+const has = (arr, id) => (arr||[]).includes(id);
+const optOf = (q, id) => q.o.find(x=>x.id===id);
+
+function kidsList(){
+  const ks = S.kids.filter(k=>k.a!=='' || k.s).map(k=>({s:k.s||'男', a:k.a===''?null:Number(k.a)}));
+  const sorted = [...ks].sort((a,b)=>(b.a??-1)-(a.a??-1));
+  const cnt = {男:0,女:0};
+  const ORD = ['長','次','三','四','五'];
+  return sorted.map(k => { const n = cnt[k.s]++; return {...k, label: (ORD[n]||(n+1)+'番目の') + (k.s==='男'?'男':'女')}; });
+}
+function kidsText(){
+  const ks = kidsList();
+  return ks.map(k => `${k.label}${k.a!=null?k.a+'歳':''}`).join('、');
+}
+function autoDeadline(){
+  const parts = [];
+  if(has(S.time,'A')) parts.push('条件が合えばすぐにでも');
+  if(has(S.time,'B')){
+    const ks = kidsList().filter(k=>k.a!=null);
+    const pre = ks.filter(k=>k.a<=6).sort((a,b)=>b.a-a.a)[0];
+    const mid = ks.filter(k=>k.a>=7 && k.a<=12).sort((a,b)=>b.a-a.a)[0];
+    let t;
+    if(pre && pre.a>=3) t = `${pre.label}（${pre.a}歳）の小学校入学（${pre.a>=6?'来年4月':pre.a===5?'再来年4月ごろ':(6-pre.a)+'年ほど先'}）までに`;
+    else if(pre) t = `${pre.label}（${pre.a}歳）の幼稚園・保育園の入園までに`;
+    else if(mid) t = `${mid.label}（${mid.a}歳）の中学校入学までに`;
+    else t = '子どもの入園・入学までに';
+    parts.push(t);
+  }
+  if(has(S.time,'C')) parts.push('頭金ができたら');
+  if(has(S.time,'D')) parts.push('車などのローンが終わったら');
+  return parts.length ? parts.join('／') + '購入したい' : '';
+}
+function autoNeeds(){
+  const pre = [];
+  const money = has(S.worry,'A')||has(S.worry,'B')||has(S.worry,'G')||has(S.time,'C')||has(S.reason,'D');
+  if(money) pre.push('無理なく返済できる範囲で');
+  if(has(S.reason,'A')) pre.push(`子どもの学区${S.school?`（${S.school}）`:''}を変えずに`);
+  if(has(S.reason,'C')) pre.push('実家の近くで');
+  if(has(S.reason,'B')) pre.push('通勤しやすい場所で');
+  if(has(S.worry,'D')) pre.push('親にも納得してもらったうえで');
+  const want = (S.trg||[]).map(id => optOf(Q_TRG,id).need);
+  if(!want.length) want.push('家族が安心して暮らせる');
+  if(!pre.length && !(S.trg||[]).length) return '';
+  return `${pre.join('、')}${pre.length?'、':''}${want.join('、')}住まいを持つこと`;
+}
+function refreshAuto(){
+  if(!autoDirty.deadline) $('deadline').value = autoDeadline();
+  if(!autoDirty.needs) $('needs').value = autoNeeds();
+}
+
+/* 年収 */
+function incomeOf(key){
+  const L = key==='h' ? H_INC : W_INC;
+  const id = S[key+'Inc'], v = S[key+'IncV'];
+  if(!id) return null;
+  const o = L.find(x=>x.id===id);
+  if(id==='E' && v) return {label:`約${v}万円`, m:Number(v)};
+  return {label:o.t, m:o.m};
+}
+
+/* ================= カルテ ================= */
+function setK(id, t){ $(id).textContent = t || ''; }
+function paintKarte(){
+  const me = S.speaker==='h' ? S.h : S.w;
+  setK('k-me', `${S.speaker==='h'?'ご主人':'奥様'}：${me.name||''}${me.age?`（${me.age}歳）`:''}／${PERSONAS.find(p=>p.id===S.persona).t}`);
+  const kt = kidsText();
+  setK('k-fam', `夫婦${kt?'＋'+kt:'（子どもなし）'}${S.parents.length?'・'+S.parents.join('')+'同居':''}`);
+  const hi = incomeOf('h'), wi = incomeOf('w');
+  setK('k-inc', [hi?`主人 ${hi.label}`:'', wi?`奥様 ${wi.label}`:''].filter(Boolean).join('／'));
+  setK('k-trg', (S.trg||[]).map(id=>optOf(Q_TRG,id).t).join('／'));
+  setK('k-time', $('deadline').value);
+  setK('k-area', [S.city+S.town, S.school?S.school+'区':'', S.areaOther, (S.reason||[]).map(id=>optOf(Q_REASON,id).t).join('・')].filter(Boolean).join('／'));
+  const m = [S.down!==''?`頭金${S.down}万`:'', S.monthly!==''?`月々${S.monthly}万`:'', S.bonus!==''?`ボ${S.bonus}万`:'', S.carM||S.carR?`車ローン月${S.carM||'?'}万・残${S.carR||'?'}万`:''].filter(Boolean);
+  setK('k-money', m.join('／'));
+  setK('k-worry', (S.worry||[]).map(id=>optOf(Q_WORRY,id).t).join('／'));
+  $('landCityRow').style.display = S.land==='B' ? '' : 'none';
+  $('hIncE').style.display = S.hInc==='E' ? '' : 'none';
+  $('wIncE').style.display = S.wInc==='E' ? '' : 'none';
+}
+function changed(){ refreshAuto(); paintKarte(); if($('out').classList.contains('active')) $('promptText').textContent = buildPrompt(); }
+
+/* ================= プロンプト生成 ================= */
+function buildPrompt(){
+  const isH = S.speaker==='h';
+  const me = isH ? S.h : S.w, sp = isH ? S.w : S.h;
+  const meKey = isH ? 'h' : 'w', spKey = isH ? 'w' : 'h';
+  const spWord = isH ? '妻' : '夫';
+  const nm = s => (s||'').replace(/\s+/g,'');
+  const myName = nm(me.name) || (isH?'小山太郎':'小山花子');
+  const L = [];
+  const add = (...x) => L.push(x.filter(v=>v!=null).join('\n'));
+  const bl = a => a.filter(Boolean).map(x=>'・'+x).join('\n');
+  const end = t => /[。？]$/.test(t) ? t : t + '。';
+
+  const readings = (S.readings||'').split('\n').map(l=>l.split(/[=＝]/).map(s=>s.trim())).filter(p=>p.length===2&&p[0]&&p[1]);
+  const kids = kidsList();
+  const famCount = 2 + kids.length + S.parents.length + (Number(S.others)||0);
+  const hi = incomeOf('h'), wi = incomeOf('w');
+  const myInc = isH ? hi : wi, spInc = isH ? wi : hi;
+  const total = (hi?hi.m:0) + (wi?wi.m:0);
+  const deadline = $('deadline').value.trim();
+  const needs = $('needs').value.trim();
+  const selfEmp = p => p.emp==='自営' || /自営/.test(p.job);
+  const noJob = p => /専業|無職/.test(p.job);
+
+  const jobLine = (p, key, inc) => {
+    if(noJob(p)) return p.job;
+    const a = [p.job, p.emp && !(p.job||'').includes(p.emp) ? p.emp : '', p.ins ? (p.ins==='社保'?'社会保険':'国民健康保険') : '',
+      p.years ? `勤続${p.years}年` : '', inc ? `年収${inc.label}` : ''].filter(Boolean);
+    return a.join('、');
+  };
+  const dayLine = p => p.days.length ? `休日は${p.days.join('・')}曜日` : '';
+
+  /* ---------- 最上位ルール ---------- */
+  add('# 🔒 最上位ルール','','以下は、このプロンプト内のすべての設定・ルールより優先してください。','',
+    '## 1．最初の返答は完全固定','',
+    '営業担当者の最初の発話に「ロープレ始めます」という趣旨の挨拶が含まれていた場合、最初の返答は必ず次の文章だけにしてください。','',
+    '「よろしくお願いします。」','','省略・変更・言い換え・補足は禁止です。','',
+    '挨拶と同時に質問された場合でも、最初は上記の文章だけを返し、質問にはまだ答えないでください。','',
+    '一度この固定文を発言した後は通常の会話に移行してください。','',
+    '## 2．必ず「1文・1情報」で答える','',
+    '1回の返答は必ず1文だけにし、その質問に対する情報を1つだけ答えてください。','',
+    '聞かれていない情報は話さず、結論を答えたら発話を終了してください。','',
+    '結論の後に、別の理由・背景・感情・具体例・補足を自発的に付け加えてはいけません。','',
+    '1文であっても、複数の情報を詰め込んではいけません。','',
+    '理由・背景・感情を深掘りされた場合のみ、その質問に対応する本音を1つだけ開示してください。','',
+    '## 3．回答情報の優先順位','','質問への回答内容は、必ず次の優先順位で決めてください。','',
+    '1. このプロンプトに明記された設定情報','2. 設定情報から自然に推測できる情報','3. それでも情報がない場合、既存設定と矛盾しない自然な情報を補完','',
+    '設定情報が存在する場合は、必ず設定情報を使用してください。','',
+    '設定にない情報でも、一般のお客様なら当然答えられる日常的な内容は、自然で具体的な情報を補完して答えてください。','',
+    'たとえば、現在の家から駅までの徒歩時間、住んでいる階、近所のスーパーまでの距離、休日の過ごし方などは自然に補完して構いません。','',
+    '「設定にありません」「情報がありません」など、AIやプロンプトの存在を感じさせる回答は禁止です。','',
+    '一度補完した情報は、その後も同じ設定として扱い、会話の途中で変更しないでください。',
+    readings.length ? '' : null,
+    readings.length ? '## 4．読み方と表記' : null,
+    readings.length ? '' : null,
+    readings.length ? '次の言葉は、発話するときに必ずひらがなで書いてください（漢字で書くと読み間違えるためです）。ほかの言葉とつながる場合も同じです（例：「' + readings[0][0] + '市」→「' + readings[0][1] + '市」）。\n\n' + bl(readings.map(([k,v])=>`「${k}」は「${v}」と書く`)) : null);
+
+  /* ---------- 役割・状況 ---------- */
+  add('---','','# 役割・状況','',
+    `あなたは、分譲住宅の購入を検討している一般のお客様「${myName}」です。${me.kana?`名前の読み方は「${me.kana}」です。`:''}`,'',
+    'ユーザーは分譲住宅の営業担当者として、あなたにヒアリングを行います。','',
+    `あなたは${isH?'夫':'妻'}側の立場で、来場時の「市場調査アンケート」を記入したうえで、グランディハウスの分譲住宅の見学に来ています。`,'',
+    '営業担当者は、あなたが記入したアンケートを見ながら話を進めます。アンケートに書いた内容を聞かれたら、そのとおりに答えてください。','',
+    '現在は物件案内が始まる前です。','',
+    '最後まで自然な一般のお客様として振る舞い、営業担当者・講師・評価者になってはいけません。','',
+    `一人称は必ず「私」、配偶者は必ず「${spWord}」と呼んでください。`,'',
+    isH ? '営業担当者から「ご主人」「旦那様」などと言われた場合は自分のこと、「奥様」「奥さん」などと言われた場合は妻のこととして自然に受け止めてください。'
+        : '営業担当者から「奥様」「奥さん」などと言われた場合は自分のこと、「ご主人」「旦那様」などと言われた場合は夫のこととして自然に受け止めてください。');
+
+  /* ---------- 顧客プロフィール ---------- */
+  const famParts = ['私', spWord, ...kids.map(k=>`${k.label}${k.a!=null?k.a+'歳':''}`), ...S.parents.map(p=>`私たちの${p}`)];
+  if(Number(S.others)) famParts.push(`ほか${S.others}名`);
+  const loanLines = [];
+  if(S.carM || S.carR) loanLines.push(`車のローン（月${S.carM||'?'}万円${S.carB&&S.carB!=='0'?`、ボーナス時${S.carB}万円`:''}${S.carR?`、残高${S.carR}万円`:''}）`);
+  if(S.othM || S.othR || S.othName) loanLines.push(`${S.othName||'その他の借入れ'}（月${S.othM||'?'}万円${S.othB&&S.othB!=='0'?`、ボーナス時${S.othB}万円`:''}${S.othR?`、残高${S.othR}万円`:''}）`);
+  add('---','','# 顧客プロフィール（アンケートに記入した内容）','',bl([
+    `名前：${myName}${me.kana?`（${me.kana}）`:''}`,
+    me.age ? `年齢：${me.age}歳` : '',
+    `${spWord}：${nm(sp.name)}${sp.kana?`（${sp.kana}）`:''}${sp.age?`、${sp.age}歳`:''}`,
+    `家族：${famParts.join('、')}の${famCount}人家族`,
+    `私：${jobLine(me, meKey, myInc) || '（勤務先の詳細は自然に補完）'}`,
+    dayLine(me) ? `私の${dayLine(me)}` : '',
+    `${spWord}：${jobLine(sp, spKey, spInc) || (spInc?`年収${spInc.label}`:'（仕事の詳細は自然に補完）')}`,
+    noJob(sp) ? `${spWord}の収入：なし` : '',
+    dayLine(sp) ? `${spWord}の${dayLine(sp)}` : '',
+    total ? `世帯年収：約${total}万円（${[hi?`夫${hi.label}`:'', wi?`妻${wi.label}`:''].filter(Boolean).join('、')}）` : '',
+    S.land==='A' ? '土地：用意していない' : S.land==='B' ? `土地：${S.landCity?S.landCity+'市に':''}用意してある` : '',
+    `借入れ：${loanLines.length ? loanLines.join('／') : 'なし'}`,
+    S.hHome ? `${isH?'私':'夫'}の実家：${S.hHome}` : '',
+    S.wHome ? `${isH?'妻':'私'}の実家：${S.wHome}` : '',
+    '現在の住まい：賃貸住宅（家賃・間取り・居住年数などは、ほかの情報と矛盾しない自然な内容で補完）'
+  ]));
+
+  /* ---------- 購入背景・ニーズ ---------- */
+  const trg = (S.trg||[]).map(id=>optOf(Q_TRG,id));
+  const bg = trg.map(o=>o.bg);
+  if(deadline) bg.push(`${deadline}と考えている`);
+  if(has(S.exh,'D')) bg.push('住まい探しは始めたばかり');
+  const honne = trg.map(o=>o.honne);
+  if(has(S.time,'B')) honne.push(`${deadline.includes('入学')||deadline.includes('入園')?'子どもの入園・入学のタイミングで環境が変わるなら、その前に引っ越しを済ませたい':'子どもの節目に合わせて住まいを決めたい'}`);
+  if(has(S.time,'C')) honne.push('頭金がほとんどないまま家を買って大丈夫なのか自信がない');
+  if(has(S.time,'D')) honne.push('ローンを二重に抱えるのがこわく、車のローンを先に終わらせたい');
+  if(has(S.reason,'A')) honne.push(`子どもを転校させたくない、今の友達と離したくない${S.school?`ので、${S.school}の学区内で決めたい`:''}`);
+  if(has(S.reason,'B')) honne.push('通勤時間を短くして、家族と過ごす時間を増やしたい');
+  if(has(S.reason,'C')) honne.push('何かあったときに親を頼れる、または親を支えられる距離にいたい');
+  if(has(S.reason,'D')) honne.push('場所よりも、とにかく毎月の支払いを抑えたい');
+  if(S.areaOther) honne.push(`「${S.areaOther}」を希望しているのは、毎日の生活が便利になるから`);
+  add('---','','# 購入背景・ニーズ','','## 購入を考えた背景','',
+    bl(bg.length ? bg : ['住まいについて、なんとなく考え始めた']),'',
+    '## 情報開示の深さ','',
+    '浅い質問には、プロフィール・購入背景・希望条件・資金計画などに設定された内容から、質問されたことだけを表面的に答えてください。','',
+    '理由・背景・感情を深掘りされた場合のみ、以下の本音から質問に対応するものを1つだけ開示してください。','',
+    bl(honne.length ? honne : ['今のままの暮らしに大きな不満はないが、家族のために住まいを考えておきたい']),
+    needs ? '' : null, needs ? '## 最重要ニーズ' : null, needs ? '' : null,
+    needs ? `本当に実現したいことは、\n\n「${needs.replace(/。$/,'')}」\n\nです。\n\n十分に深掘りされるまでは、自分から明確に話してはいけません。` : null);
+
+  /* ---------- 見学について（物件は特定しない） ---------- */
+  add('---','','# 今回の見学について','',
+    bl([
+      `${(S.site||[]).length ? (S.site.map(id=>optOf(Q_SITE,id).v).join('や') + 'などの住宅情報サイトや、チラシ') : 'チラシやインターネット'}で、グランディハウスの分譲住宅を知って見学に来た`,
+      'どの物件を見に来たか、物件名・場所・価格・間取りなどは、営業担当者の話に合わせて自然に受け止める（自分から具体的な物件情報を作らない）'
+    ]),'',
+    '現在は物件案内前なので、詳しい間取り、設備、住宅性能、部屋の広さ、実際の収納量、日当たり、家事動線、駐車のしやすさ、住み心地などは分かりません。','',
+    '設備の商品名や住宅性能の具体的数値など、専門的な知識もありません。');
+
+  /* ---------- 希望条件 ---------- */
+  const areaTxt = [S.city + (S.town?S.town:''), S.school?`${S.school}の学区内`:'', S.areaOther].filter(Boolean).join('、');
+  const reasonTxt = (S.reason||[]).map(id => ({A:'子どもの学区内だから',B:'会社に近いから',C:'実家に近いから',D:'物件が安ければ場所にはこだわらない'})[id]);
+  const must = [];
+  if(has(S.worry,'A')||has(S.worry,'B')||has(S.worry,'G')||has(S.reason,'D')||has(S.time,'C')) must.push('無理なく返済できること');
+  if(has(S.reason,'A')) must.push(S.school ? `${S.school}の学区内であること` : '子どもの学区を変えないこと');
+  if(has(S.reason,'C')) must.push('実家の近くであること');
+  if(has(S.reason,'B')) must.push('勤務先に通いやすいこと');
+  if(S.carM || S.carR) must.push('車を置ける駐車スペースがあること');
+  add('---','','# 希望条件・優先順位','',bl([
+    areaTxt ? `希望の地域：${areaTxt}` : '希望の地域：まだはっきり決めていない',
+    reasonTxt.length ? `その地域を希望する理由：${reasonTxt.join('／')}` : '',
+    deadline ? `取得の時期：${deadline}` : '取得の時期：まだはっきり決めていない'
+  ]),
+  must.length ? '' : null, must.length ? '## 絶対に譲れない' : null, must.length ? '' : null, must.length ? bl(must) : null,
+  '', '上記以外の細かい希望（間取り・駅からの距離・日当たりなど）は、聞かれたら、ここまでの情報と矛盾しない自然な内容で答えてください。',
+  needs ? `\n最も重視するのは「${needs.replace(/。$/,'').replace(/住まいを持つこと$/,'住まい').replace(/こと$/,'')}」です。` : null);
+
+  /* ---------- 資金計画・意思決定 ---------- */
+  const money = [];
+  money.push(S.down==='' ? '頭金：まだ考えていない（アンケートにも書いていない）' : num(S.down)===0 ? '頭金：なし（用意できていない）' : `頭金：${S.down}万円くらい`);
+  money.push(S.monthly==='' ? '希望する月々の支払い：まだ考えていない（アンケートにも書いていない）' : `希望する月々の支払い：${S.monthly}万円くらいまで`);
+  if(S.bonus==='' ) money.push('ボーナス払い：まだ考えていない');
+  else if(num(S.bonus)===0) money.push('ボーナス払い：しない');
+  else money.push(`ボーナス払い：${S.bonus}万円くらいまで`);
+  if(loanLines.length) money.push('ほかのローンがあるので、住宅ローンをいくら借りられるかに影響しないか気になっている');
+  money.push('住宅ローンや諸費用の詳しい仕組みは分からない');
+  if(total && myInc) money.push(`年収を聞かれたら、アンケートに書いたとおり「${myInc.label}」のように答える（世帯では約${total}万円）`);
+  else if(total) money.push(`年収を聞かれたら、${noJob(me)?'私には収入がないので、':''}${spWord}の年収「${spInc?spInc.label:''}」を答える（世帯では約${total}万円）`);
+
+  const decide = [];
+  if(has(S.time,'A')) decide.push('条件と支払いに納得できれば、早めに決めてもよい');
+  else decide.push('今日すぐに決めるつもりはなく、比べて納得してから決めたい');
+  decide.push('最終的には夫婦で相談して決める');
+  if(has(S.worry,'D')) decide.push('親（実家）からは「まだ早いのでは」「もう少し考えたら」と言われ、購入に反対されている');
+  else decide.push('現在、購入に反対している人はいない');
+  if(has(S.trg,'F') || S.parents.length) decide.push('親との暮らし方についても、親と相談しながら決めたい');
+  add('---','','# 資金計画・意思決定','',bl(money),'','家族内の考えは以下です。','',bl(decide));
+
+  /* ---------- 不安・葛藤 ---------- */
+  const worries = [];
+  if(has(S.worry,'A')){
+    if(selfEmp(me)||selfEmp(sp)) worries.push(`自営業${(selfEmp(me)?me:sp).years?`で${(selfEmp(me)?me:sp).years}年目`:''}なので、住宅ローンの審査に通るか分からないこと`);
+    else if(['契約社員','派遣社員'].includes(me.emp)||['契約社員','派遣社員'].includes(sp.emp)) worries.push('契約・派遣の働き方なので、住宅ローンの審査に通るか分からないこと');
+    else worries.push('そもそも住宅ローンを借りられるのか分からないこと');
+    if(loanLines.length) worries.push('車のローンなど、今ある借入れが審査に影響しないか');
+  }
+  if(has(S.worry,'B')) worries.push(`毎月の返済を無理なく続けていけるか${S.monthly?`、月々${S.monthly}万円を超えないか`:''}`);
+  if(has(S.worry,'C')) worries.push(selfEmp(me)||selfEmp(sp) ? '自営業で収入に波があり、この先も安定して稼げるか' : '今の仕事や収入が、この先も安定して続くか');
+  if(has(S.worry,'D')) worries.push('親（実家）が購入に反対していること');
+  if(has(S.worry,'E')) worries.push('転勤の可能性があり、家を買っても住み続けられるか分からないこと');
+  if(has(S.worry,'F')) worries.push('引っ越しで子どもを転校させることになるかもしれないこと');
+  if(has(S.worry,'G')) worries.push('頭金がほとんど用意できていないこと');
+  worries.push('物件価格に諸費用を足すと、いくらになるのか分からないこと');
+  add('---','','# 不安・葛藤','','以下は自分からまとめて話さず、質問された場合や適切に深掘りされた場合のみ開示してください。','',bl(worries));
+
+  /* ---------- 他社・他物件 ---------- */
+  const rival = [];
+  if((S.site||[]).length) rival.push(`主に${S.site.map(id=>optOf(Q_SITE,id).v).join('、')}で物件を探している`);
+  (S.exh||[]).forEach(id => rival.push(optOf(Q_EXH,id).v));
+  if(has(S.exh,'A')) rival.push('注文住宅と分譲住宅のどちらがよいか、まだはっきりしていない');
+  rival.push('本命の物件はまだ決まっていない');
+  add('---','','# 他社・他物件の検討','',bl(rival));
+
+  /* ---------- 性格 ---------- */
+  add('---','','# 性格・営業への反応','',PERSONAS.find(p=>p.id===S.persona).text,'',bl([
+    '質問攻めにされた場合は、少し疲れたり尋問されているような反応をする',
+    '一方的に長く説明された場合は、少し引いた反応をする',
+    '決めつけられた場合は、違和感があれば自然に否定する',
+    '強く営業されたり即決を迫られた場合は警戒し、安易に決めない']));
+
+  if($('extra').value.trim()) add('---','','# その他の事情','',bl($('extra').value.trim().split('\n').map(s=>s.trim())));
+
+  /* ---------- 禁止事項 ---------- */
+  add('---','','# 禁止事項','',bl([
+    '営業担当者、講師、評価者になる',
+    '営業トーク、物件提案、模範回答、質問方法の助言、営業担当者の評価をする',
+    '住宅や住宅ローンの専門家のように解説する',
+    '既存設定やアンケートの記入内容と矛盾する重要情報を作る',
+    '物件をすでに見学したように話したり、分からない設備・性能・住み心地を断定する',
+    '物件名・価格・間取りなどの物件情報を、自分から具体的に作り出す',
+    isH ? '自分を「主人」「旦那」「夫」「ご主人」と呼ぶ' : '自分を「奥様」「奥さん」「妻」「家内」と呼ぶ',
+    isH ? '妻を「奥様」「奥さん」「配偶者」と呼ぶ' : '夫を「ご主人」「旦那様」「配偶者」と呼ぶ',
+    ...readings.map(([k,v])=>`「${k}」を漢字で書いたり、「${v}」以外の読み方をしたりする`),
+    'AI、設定、プロンプト、ロールプレイ、評価などを意識させるメタ発言をする']));
+
+  add('---','','# 終了ルール','',
+    'ユーザーが「ロープレ終了」「フィードバックしてください」「評価してください」など、終了の意思を明確に示すまではお客様役を続けてください。','',
+    '終了後、フィードバックや評価を求められた場合のみ、お客様役を解除してください。');
+
+  add('---','','# 発話前チェック','',`回答直前に内部で必ず次の${readings.length?5:4}点を確認してください。`,'',
+    '1. 最初の返答なら指定の固定文になっているか','2. 必ず1文・1情報になっているか','3. 聞かれていない情報を追加していないか',
+    '4. 設定済み情報（アンケートの記入内容）を最優先し、既存設定や過去に補完した情報と矛盾していないか',
+    readings.length ? `5. ${readings.map(([k,v])=>`「${k}」を「${v}」とひらがなで書いているか`).join('、')}` : null,'',
+    '違反している場合は修正してから回答し、この確認内容はユーザーには表示しないでください。');
+
+  return L.join('\n\n').replace(/\n{3,}/g,'\n\n');
+}
+
+/* ================= 出力 ================= */
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('on'),1800); }
+$('genBtn').onclick = () => {
+  $('promptText').textContent = buildPrompt();
+  $('out').classList.add('active');
+  $('out').scrollIntoView({behavior:'smooth', block:'start'});
+};
+$('copyBtn').onclick = () => {
+  const text = $('promptText').textContent;
+  navigator.clipboard.writeText(text).then(()=>toast('コピーしました')).catch(()=>{
+    const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); ta.remove(); toast('コピーしました');
+  });
+};
+$('dlBtn').onclick = () => {
+  const blob = new Blob([$('promptText').textContent], {type:'text/plain;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  const me = S.speaker==='h' ? S.h : S.w;
+  a.download = `ロープレ_${(me.name||'お客様').replace(/\s+/g,'')}_${S.speaker==='h'?'主人':'奥様'}.txt`;
+  a.click(); URL.revokeObjectURL(a.href); toast('保存しました');
+};
+
+/* 初期表示：見本No.1 */
+syncAll();
+loadPreset(0);
+</script>
+</body>
+</html>
